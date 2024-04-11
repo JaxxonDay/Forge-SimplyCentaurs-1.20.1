@@ -1,5 +1,6 @@
 package com.jaxxonday.experimentmod;
 
+import com.jaxxonday.experimentmod.item.ModItems;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.api.distmarker.Dist;
@@ -26,6 +27,8 @@ public class ExperimentMod {
     public ExperimentMod()
     {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
+
+        ModItems.register(modEventBus);
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
