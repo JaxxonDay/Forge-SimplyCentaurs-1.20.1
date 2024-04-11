@@ -27,4 +27,18 @@ public class ModItemModelProvider extends ItemModelProvider {
                 new ResourceLocation(ExperimentMod.MODID, "item/" + item.getId().getPath()));
     }
 
+    private ItemModelBuilder handheldItem(RegistryObject<Item> item) {
+        return withExistingParent(item.getId().getPath(),
+                new ResourceLocation("item/handheld")).texture("layer0",
+                new ResourceLocation(ExperimentMod.MODID,"item/" + item.getId().getPath()));
+    }
+
+    private ItemModelBuilder handheldRodItem(RegistryObject<Item> item) {
+        return withExistingParent(item.getId().getPath(),
+                new ResourceLocation("item/handheld_rod")).texture("layer0",
+                new ResourceLocation(ExperimentMod.MODID,"item/" + item.getId().getPath()));
+    }
+
+
+
 }
