@@ -1,7 +1,9 @@
 package com.jaxxonday.simplycentaurs.item;
 
 import com.jaxxonday.simplycentaurs.CentaurMod;
+import com.jaxxonday.simplycentaurs.entity.ModEntities;
 import net.minecraft.world.item.Item;
+import net.minecraftforge.common.ForgeSpawnEggItem;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -28,6 +30,9 @@ public class ModItems {
     public static final RegistryObject<Item> DIAMOND_CENTAUR_ARMOR = ITEMS.register("diamond_centaur_armor",
             () -> new Item(new Item.Properties().stacksTo(1).durability(1024)));
 
+    public static final RegistryObject<Item> CENTAUR_SPAWN_EGG = ITEMS.register("centaur_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntities.CENTAUR, 0x1b9e72, 0xa5fc03,
+                    new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

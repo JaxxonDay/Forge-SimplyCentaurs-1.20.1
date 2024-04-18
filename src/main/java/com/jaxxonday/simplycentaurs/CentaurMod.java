@@ -56,11 +56,15 @@ public class CentaurMod {
 
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
-        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+        if (event.getTabKey() == CreativeModeTabs.COMBAT) {
             event.accept(ModItems.LEATHER_CENTAUR_ARMOR);
             event.accept(ModItems.IRON_CENTAUR_ARMOR);
             event.accept(ModItems.GOLDEN_CENTAUR_ARMOR);
             event.accept(ModItems.DIAMOND_CENTAUR_ARMOR);
+        }
+
+        if(event.getTabKey() == CreativeModeTabs.SPAWN_EGGS) {
+            event.accept(ModItems.CENTAUR_SPAWN_EGG);
         }
     }
 

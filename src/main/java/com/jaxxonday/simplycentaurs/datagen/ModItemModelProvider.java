@@ -21,6 +21,8 @@ public class ModItemModelProvider extends ItemModelProvider {
         simpleItem(ModItems.IRON_CENTAUR_ARMOR);
         simpleItem(ModItems.GOLDEN_CENTAUR_ARMOR);
         simpleItem(ModItems.DIAMOND_CENTAUR_ARMOR);
+
+        withExistingParent(ModItems.CENTAUR_SPAWN_EGG.getId().getPath(), mcLoc("item/template_spawn_egg"));
     }
 
 

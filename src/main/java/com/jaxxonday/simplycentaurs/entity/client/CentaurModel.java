@@ -1,11 +1,14 @@
 package com.jaxxonday.simplycentaurs.entity.client;
 
+import com.jaxxonday.simplycentaurs.entity.animations.CentaurAnimationDefinitions;
+import com.jaxxonday.simplycentaurs.entity.custom.CentaurEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.model.HierarchicalModel;
 import net.minecraft.client.model.geom.ModelPart;
 import net.minecraft.client.model.geom.PartPose;
 import net.minecraft.client.model.geom.builders.*;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
@@ -136,7 +139,18 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 	@Override
 	public void setupAnim(T entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+		this.root().getAllParts().forEach(ModelPart::resetPose);
+		this.applyHeadRotation(netHeadYaw, headPitch);
 
+		this.animateWalk(CentaurAnimationDefinitions.WALK, limbSwing, limbSwingAmount, 1.5f, 2.5f);
+		this.animate(((CentaurEntity) entity).idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 1f);
+	}
+
+	private void applyHeadRotation(float pNetHeadYaw, float pHeadPitch) {
+		pNetHeadYaw = Mth.clamp(pNetHeadYaw, -70.0f, 70.0f);
+		pHeadPitch = Mth.clamp(pHeadPitch, -35.0f, 55.0f);
+		this.head.yRot = pNetHeadYaw * ((float) Math.PI / 180f);
+		this.head.xRot = pHeadPitch * ((float) Math.PI / 180f);
 	}
 
 	@Override

@@ -2,9 +2,7 @@ package com.jaxxonday.simplycentaurs.entity.custom;
 
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
-import net.minecraft.world.entity.Saddleable;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -19,6 +17,9 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         super(pEntityType, pLevel);
     }
 
+    public final AnimationState idleAnimationState = new AnimationState();
+    private int idleAnimationTimeout = 0;
+
 
     @Override
     protected void registerGoals() {
@@ -32,22 +33,46 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     public static AttributeSupplier.Builder createAttributes() {
         return ModAbstractSmartCreature.createLivingAttributes()
-                .add(Attributes.MAX_HEALTH, 20D)
-                .add(Attributes.FOLLOW_RANGE, 50D)
-                .add(Attributes.MOVEMENT_SPEED, 0.25D)
-                .add(Attributes.ARMOR_TOUGHNESS, 0.0D)
-                .add(Attributes.ATTACK_DAMAGE, 1.0D)
-                .add(Attributes.ATTACK_KNOCKBACK, 0.2D);
+                .add(Attributes.MAX_HEALTH, 20d)
+                .add(Attributes.FOLLOW_RANGE, 50d)
+                .add(Attributes.MOVEMENT_SPEED, 0.25d)
+                .add(Attributes.ARMOR_TOUGHNESS, 0.0d)
+                .add(Attributes.ATTACK_DAMAGE, 1.0d)
+                .add(Attributes.ATTACK_KNOCKBACK, 0.2d);
     }
 
 
+    @Override
+    public void tick() {
+        super.tick();
+
+        if(this.level().isClientSide()) {
+            runAnimationStates();
+        }
+    }
 
 
+    private void runAnimationStates() {
+        if(this.idleAnimationTimeout <= 0) {
+            this.idleAnimationTimeout = 40;
+            this.idleAnimationState.start(this.tickCount);
+        } else {
+            --this.idleAnimationTimeout;
+        }
 
+    }
 
+    @Override
+    protected void updateWalkAnimation(float pPartialTick) {
+        float f;
+        if(this.getPose() == Pose.STANDING) {
+            f = Math.min(pPartialTick * 6f, 1f);
+        } else {
+            f = 0f;
+        }
 
-
-
+        this.walkAnimation.update(f, 0.2f);
+    }
 
     // Saddle Data
     @Override
