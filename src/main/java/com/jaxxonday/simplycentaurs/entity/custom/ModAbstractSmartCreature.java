@@ -11,6 +11,7 @@ import net.minecraft.world.level.Level;
 
 public abstract class ModAbstractSmartCreature extends PathfinderMob implements ContainerListener {
     private static final EntityDataAccessor<Integer> DATA_GENDER = SynchedEntityData.defineId(ModAbstractSmartCreature.class, EntityDataSerializers.INT);
+    private int variant = 0;
     protected boolean loadedSaveData = false;
     protected boolean hasBeenAddedBefore = false;
     protected ModAbstractSmartCreature(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
@@ -28,6 +29,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
         super.addAdditionalSaveData(pCompound);
         pCompound.putBoolean("HasBeenAddedBefore", this.getPersistentData().getBoolean("HasBeenAddedBefore"));
         pCompound.putInt("Gender", this.getGender());
+        pCompound.putInt("Variant", this.getVariant());
     }
 
 
@@ -39,6 +41,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
         this.hasBeenAddedBefore = pCompound.getBoolean("HasBeenAddedBefore");
         if(this.hasBeenAddedBefore) {
             setGender(pCompound.getInt("Gender"));
+            setVariant(pCompound.getInt("Variant"));
             //System.out.println("Setting Gender from Saved Gender");
         }
 
@@ -51,6 +54,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
         if (!this.getPersistentData().getBoolean("HasBeenAddedBefore")) {
             this.getPersistentData().putBoolean("HasBeenAddedBefore", true);
             this.setGender(this.random.nextInt(2) + 1);
+            this.setVariant(this.random.nextInt(5));
         }
     }
 
@@ -60,5 +64,14 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
 
     public int getGender() {
         return this.entityData.get(DATA_GENDER);
+    }
+
+
+    public void setVariant(int pVariant) {
+        this.variant = pVariant;
+    }
+
+    public int getVariant() {
+        return this.variant;
     }
 }
