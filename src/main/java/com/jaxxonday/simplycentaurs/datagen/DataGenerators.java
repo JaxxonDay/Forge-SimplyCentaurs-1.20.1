@@ -1,7 +1,6 @@
-package com.jaxxonday.experimentmod.datagen;
+package com.jaxxonday.simplycentaurs.datagen;
 
-import com.jaxxonday.experimentmod.ExperimentMod;
-import net.minecraft.core.HolderLookup;
+import com.jaxxonday.simplycentaurs.CentaurMod;
 import net.minecraft.data.DataGenerator;
 import net.minecraft.data.PackOutput;
 import net.minecraftforge.common.data.ExistingFileHelper;
@@ -9,9 +8,7 @@ import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
-import java.util.concurrent.CompletableFuture;
-
-@Mod.EventBusSubscriber(modid = ExperimentMod.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
+@Mod.EventBusSubscriber(modid = CentaurMod.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class DataGenerators {
     @SubscribeEvent
     public static void gatherData(GatherDataEvent event) {

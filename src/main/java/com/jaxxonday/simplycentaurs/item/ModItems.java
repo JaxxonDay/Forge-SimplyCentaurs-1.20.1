@@ -1,15 +1,14 @@
-package com.jaxxonday.experimentmod.item;
+package com.jaxxonday.simplycentaurs.item;
 
-import com.jaxxonday.experimentmod.ExperimentMod;
+import com.jaxxonday.simplycentaurs.CentaurMod;
 import net.minecraft.world.item.Item;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
-import net.minecraftforge.registries.RegistryObject;
 
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS =
-            DeferredRegister.create(ForgeRegistries.ITEMS, ExperimentMod.MODID);
+            DeferredRegister.create(ForgeRegistries.ITEMS, CentaurMod.MODID);
 
 
 //    public static final RegistryObject<Item> SAPPHIRE = ITEMS.register("sapphire",

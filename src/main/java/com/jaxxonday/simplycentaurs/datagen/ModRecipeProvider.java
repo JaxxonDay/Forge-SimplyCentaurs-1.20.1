@@ -1,7 +1,6 @@
-package com.jaxxonday.experimentmod.datagen;
+package com.jaxxonday.simplycentaurs.datagen;
 
-import com.jaxxonday.experimentmod.ExperimentMod;
-import com.jaxxonday.experimentmod.item.ModItems;
+import com.jaxxonday.simplycentaurs.CentaurMod;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.recipes.*;
 import net.minecraft.world.item.crafting.AbstractCookingRecipe;
@@ -60,7 +59,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                             has(itemlike))
                                 .save(
                                         pFinishedRecipeConsumer,
-                                ExperimentMod.MODID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
+                                CentaurMod.MODID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
         }
 
     }

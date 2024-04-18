@@ -247,7 +247,7 @@
 [11Apr2024 00:44:19.918] [main/DEBUG] [net.minecraftforge.fml.javafmlmod.FMLJavaModLanguageProvider/LOADING]: Loading FMLModContainer from classloader cpw.mods.modlauncher.TransformingClassLoader@58b91d57 - got cpw.mods.cl.ModuleClassLoader@1c12f3ee
 [11Apr2024 00:44:19.918] [main/DEBUG] [net.minecraftforge.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for net.minecraftforge.common.ForgeMod
 [11Apr2024 00:44:19.935] [main/DEBUG] [net.minecraftforge.fml.javafmlmod.FMLJavaModLanguageProvider/LOADING]: Loading FMLModContainer from classloader cpw.mods.modlauncher.TransformingClassLoader@58b91d57 - got cpw.mods.cl.ModuleClassLoader@1c12f3ee
-[11Apr2024 00:44:19.935] [main/DEBUG] [net.minecraftforge.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for com.jaxxonday.experimentmod.ExperimentMod
+[11Apr2024 00:44:19.935] [main/DEBUG] [net.minecraftforge.fml.javafmlmod.FMLModContainer/LOADING]: Creating FMLModContainer instance for com.jaxxonday.simplycentaurs.CentaurMod
 [11Apr2024 00:44:19.979] [modloading-worker-0/DEBUG] [net.minecraftforge.versions.forge.ForgeVersion/CORE]: Forge Version package package net.minecraftforge.versions.forge, Forge, version 47.0 from cpw.mods.modlauncher.TransformingClassLoader@58b91d57
 [11Apr2024 00:44:19.979] [modloading-worker-0/DEBUG] [net.minecraftforge.versions.forge.ForgeVersion/CORE]: Found Forge version 47.0.50
 [11Apr2024 00:44:19.979] [modloading-worker-0/DEBUG] [net.minecraftforge.versions.forge.ForgeVersion/CORE]: Found Forge spec 47.0
@@ -259,9 +259,9 @@
 [11Apr2024 00:44:19.979] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v47.0.50 Initialized
 [11Apr2024 00:44:20.011] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.config.ConfigTracker/CONFIG]: Config file experimentmod-common.toml for experimentmod tracking
 [11Apr2024 00:44:20.011] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Attempting to inject @EventBusSubscriber classes into the eventbus for experimentmod
-[11Apr2024 00:44:20.011] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing com.jaxxonday.experimentmod.Config to MOD
-[11Apr2024 00:44:20.027] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing com.jaxxonday.experimentmod.datagen.DataGenerators to MOD
-[11Apr2024 00:44:20.027] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing com.jaxxonday.experimentmod.ExperimentMod$ClientModEvents to MOD
+[11Apr2024 00:44:20.011] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing com.jaxxonday.simplycentaurs.Config to MOD
+[11Apr2024 00:44:20.027] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing com.jaxxonday.simplycentaurs.datagen.DataGenerators to MOD
+[11Apr2024 00:44:20.027] [modloading-worker-0/DEBUG] [net.minecraftforge.fml.javafmlmod.AutomaticEventSubscriber/LOADING]: Auto-subscribing com.jaxxonday.simplycentaurs.CentaurMod$ClientModEvents to MOD
 [11Apr2024 00:44:20.042] [modloading-worker-0/DEBUG] [io.netty.util.internal.PlatformDependent0/]: -Dio.netty.noUnsafe: false
 [11Apr2024 00:44:20.042] [modloading-worker-0/DEBUG] [io.netty.util.internal.PlatformDependent0/]: Java version: 17
 [11Apr2024 00:44:20.058] [modloading-worker-0/DEBUG] [io.netty.util.internal.PlatformDependent0/]: sun.misc.Unsafe.theUnsafe: available
