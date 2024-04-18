@@ -11,7 +11,9 @@ import net.minecraft.resources.ResourceLocation;
 public class CentaurRenderer extends MobRenderer<CentaurEntity, CentaurModel<CentaurEntity>> {
     public CentaurRenderer(EntityRendererProvider.Context pContext) {
         super(pContext, new CentaurModel<>(pContext.bakeLayer(ModModelLayers.CENTAUR_LAYER)), 0.8f);
+        this.addLayer(new CentaurBottomVariantRenderLayer(this));
         this.addLayer(new CentaurTopVariantRenderLayer(this));
+        this.addLayer(new CentaurArmorRenderLayer(this));
     }
 
     @Override

@@ -1,25 +1,58 @@
 package com.jaxxonday.simplycentaurs.entity.custom;
 
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 public class CentaurEntity extends ModAbstractSmartCreature implements Saddleable {
+    public enum Armor {
+        NONE, LEATHER, IRON, GOLDEN, DIAMOND, NETHERITE;
+
+        public static Armor byOrdinal(int ordinal) {
+            if (ordinal < 0 || ordinal >= values().length) {
+                return NONE;  // Default
+            }
+            return values()[ordinal];
+        }
+    }
+
+    private static final EntityDataAccessor<Integer> DATA_ARMOR = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.INT);
+    public final AnimationState idleAnimationState = new AnimationState();
+    private int idleAnimationTimeout = 0;
+
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
-    public final AnimationState idleAnimationState = new AnimationState();
-    private int idleAnimationTimeout = 0;
 
+    public Armor getEquippedArmor() {
+        return Armor.byOrdinal(this.entityData.get(DATA_ARMOR));
+    }
+
+    public void setEquippedArmor(Armor pEquippedArmor) {
+        this.entityData.set(DATA_ARMOR, pEquippedArmor.ordinal());
+    }
+
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_ARMOR, 0);
+    }
 
     @Override
     protected void registerGoals() {
@@ -42,6 +75,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
+    // MAIN METHODS //
+
     @Override
     public void tick() {
         super.tick();
@@ -52,17 +87,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             runAnimationStates();
         }
     }
-
-//    private void handleTickLoadingSavedData() {
-//        // Only executes if we haven't loaded save data
-//        if(!this.loadedSaveData) {
-//            return;
-//        }
-//
-//        if(getGender() <= 0 && !this.hasBeenAddedBefore) {
-//            setGender(this.random.nextInt(2) + 1);
-//        }
-//    }
 
 
     private void runAnimationStates() {
@@ -88,13 +112,24 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-    // Setups
+    @Override
+    protected InteractionResult mobInteract(Player pPlayer, InteractionHand pHand) {
+        //return super.mobInteract(pPlayer, pHand);
 
+        ItemStack itemStack = pPlayer.getItemInHand(pHand);
 
+        if(itemStack.isEmpty()) {
+            if(getEquippedArmor() == Armor.NONE) {
+                setEquippedArmor(Armor.IRON);
+            } else {
+                setEquippedArmor(Armor.NONE);
+            }
+            return InteractionResult.SUCCESS;
+        }
 
+        return InteractionResult.PASS;
 
-
-
+    }
 
     // Saddle Data
     @Override

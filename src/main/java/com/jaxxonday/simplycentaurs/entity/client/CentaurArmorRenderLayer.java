@@ -11,11 +11,9 @@ import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
 
-public class CentaurTopVariantRenderLayer extends RenderLayer<CentaurEntity, CentaurModel<CentaurEntity>> {
-    private static final ResourceLocation FEMALE_VARIANT_0_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/variant/centaur_texture_top0.png");
-
-
-    public CentaurTopVariantRenderLayer(RenderLayerParent<CentaurEntity, CentaurModel<CentaurEntity>> pRenderer) {
+public class CentaurArmorRenderLayer extends RenderLayer<CentaurEntity, CentaurModel<CentaurEntity>> {
+    private static final ResourceLocation CENTAUR_IRON_ARMOR_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/armor/centaur_texture_armor_iron.png");
+    public CentaurArmorRenderLayer(RenderLayerParent<CentaurEntity, CentaurModel<CentaurEntity>> pRenderer) {
         super(pRenderer);
     }
 
@@ -23,12 +21,11 @@ public class CentaurTopVariantRenderLayer extends RenderLayer<CentaurEntity, Cen
     public void render(PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight, CentaurEntity pCentaurEntity, float pLimbSwing, float pLimbSwingAmount, float pPartialTick, float pAgeInTicks, float pNetHeadYaw, float pHeadPitch) {
         VertexConsumer vertexConsumer = null;
 
-        if(true) { //TODO: Add variant detection
-            vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(FEMALE_VARIANT_0_TEXTURE));
-        }
-
-        if(vertexConsumer == null) {
-            return;
+        switch (pCentaurEntity.getEquippedArmor()) {
+            case NONE -> {
+                return;
+            }
+            case IRON -> vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_IRON_ARMOR_TEXTURE));
         }
 
         getParentModel().renderToBuffer(pPoseStack, vertexConsumer, pPackedLight, LivingEntityRenderer.getOverlayCoords(pCentaurEntity, 0.0F), 1.0F, 1.0F, 1.0F, 1.0F);
