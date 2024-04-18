@@ -12,12 +12,40 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 
 public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
+	private int savedGender = 0;
 	private final ModelPart centaur;
-	private final ModelPart head;
+	public final ModelPart head;
+	private final ModelPart waist;
+	private final ModelPart chest;
+	private final ModelPart chestMale;
+	private final ModelPart chestFemale;
+	private final ModelPart waistMale;
+	private final ModelPart waistFemale;
+	private final ModelPart rArm;
+	private final ModelPart lArm;
+	private final ModelPart rArmMale;
+	private final ModelPart rArmFemale;
+
+	private final ModelPart lArmMale;
+	private final ModelPart lArmFemale;
 
 	public CentaurModel(ModelPart root) {
 		this.centaur = root.getChild("centaur");
-		this.head = centaur.getChild("body").getChild("front_body").getChild("waist").getChild("chest").getChild("head");
+		this.waist = this.centaur.getChild("body").getChild("front_body").getChild("waist");
+		this.waistMale = this.waist.getChild("waist_male");
+		this.waistFemale = this.waist.getChild("waist_fem");
+		this.chest = this.waist.getChild("chest");
+		this.head = this.chest.getChild("head");
+		this.chestMale = this.chest.getChild("chest_male");
+		this.chestFemale = this.chest.getChild("chest_fem");
+		this.rArm = this.chest.getChild("r_arm");
+		this.lArm = this.chest.getChild("l_arm");
+
+		this.rArmMale = this.rArm.getChild("r_arm_male");
+		this.rArmFemale = this.rArm.getChild("r_arm_fem");
+
+		this.lArmMale = this.lArm.getChild("l_arm_male");
+		this.lArmFemale = this.lArm.getChild("l_arm_fem");
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -142,8 +170,12 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		this.root().getAllParts().forEach(ModelPart::resetPose);
 		this.applyHeadRotation(netHeadYaw, headPitch);
 
+		CentaurEntity centaurEntity = ((CentaurEntity) entity);
+
+
+
 		this.animateWalk(CentaurAnimationDefinitions.WALK, limbSwing, limbSwingAmount, 1.5f, 2.5f);
-		this.animate(((CentaurEntity) entity).idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 1f);
+		this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 1f);
 	}
 
 	private void applyHeadRotation(float pNetHeadYaw, float pHeadPitch) {
@@ -151,6 +183,36 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		pHeadPitch = Mth.clamp(pHeadPitch, -35.0f, 55.0f);
 		this.head.yRot = pNetHeadYaw * ((float) Math.PI / 180f);
 		this.head.xRot = pHeadPitch * ((float) Math.PI / 180f);
+	}
+
+	public void setGenderVisible(int pGender) {
+		// Check to see if we need to change visibility
+		if(this.savedGender == pGender) {
+			return;
+		}
+		this.savedGender = pGender;
+
+		if(pGender == 1) {
+			this.chestMale.visible = false;
+			this.waistMale.visible = false;
+			this.rArmMale.visible = false;
+			this.lArmMale.visible = false;
+
+			this.chestFemale.visible = true;
+			this.waistFemale.visible = true;
+			this.rArmFemale.visible = true;
+			this.lArmFemale.visible = true;
+		} else if (pGender == 2){
+			this.chestFemale.visible = false;
+			this.waistFemale.visible = false;
+			this.rArmFemale.visible = false;
+			this.lArmFemale.visible = false;
+
+			this.chestMale.visible = true;
+			this.waistMale.visible = true;
+			this.rArmMale.visible = true;
+			this.lArmMale.visible = true;
+		}
 	}
 
 	@Override

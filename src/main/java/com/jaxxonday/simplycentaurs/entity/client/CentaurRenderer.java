@@ -26,6 +26,7 @@ public class CentaurRenderer extends MobRenderer<CentaurEntity, CentaurModel<Cen
                        MultiBufferSource pBuffer,
                        int pPackedLight) {
 
+        this.getModel().setGenderVisible(pEntity.getGender());
 
         if(pEntity.isBaby()) {
             pMatrixStack.scale(0.5f, 0.5f, 0.5f);
