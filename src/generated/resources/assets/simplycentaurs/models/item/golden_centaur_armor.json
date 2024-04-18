@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "simplycentaurs:item/golden_centaur_armor"
+  }
+}
