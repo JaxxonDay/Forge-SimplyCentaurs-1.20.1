@@ -3,6 +3,7 @@ package com.jaxxonday.simplycentaurs;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -48,6 +49,12 @@ public class CentaurMod {
 
     // Add the example block item to the building blocks tab
     private void addCreative(BuildCreativeModeTabContentsEvent event) {
+        if (event.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
+            event.accept(ModItems.LEATHER_CENTAUR_ARMOR);
+            event.accept(ModItems.IRON_CENTAUR_ARMOR);
+            event.accept(ModItems.GOLDEN_CENTAUR_ARMOR);
+            event.accept(ModItems.DIAMOND_CENTAUR_ARMOR);
+        }
     }
 
     // You can use SubscribeEvent and let the Event Bus discover methods to call

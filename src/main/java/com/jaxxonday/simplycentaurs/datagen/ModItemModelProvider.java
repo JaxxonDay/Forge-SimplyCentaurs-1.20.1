@@ -1,6 +1,7 @@
 package com.jaxxonday.simplycentaurs.datagen;
 
 import com.jaxxonday.simplycentaurs.CentaurMod;
+import com.jaxxonday.simplycentaurs.item.ModItems;
 import net.minecraft.data.PackOutput;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.item.Item;
@@ -16,7 +17,10 @@ public class ModItemModelProvider extends ItemModelProvider {
 
     @Override
     protected void registerModels() {
-        //simpleItem(ModItems.SAPPHIRE);
+        simpleItem(ModItems.LEATHER_CENTAUR_ARMOR);
+        simpleItem(ModItems.IRON_CENTAUR_ARMOR);
+        simpleItem(ModItems.GOLDEN_CENTAUR_ARMOR);
+        simpleItem(ModItems.DIAMOND_CENTAUR_ARMOR);
     }
 
 
