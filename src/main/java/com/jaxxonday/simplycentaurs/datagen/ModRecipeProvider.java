@@ -59,7 +59,7 @@ public class ModRecipeProvider extends RecipeProvider implements IConditionBuild
                             has(itemlike))
                                 .save(
                                         pFinishedRecipeConsumer,
-                                CentaurMod.MODID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
+                                CentaurMod.MOD_ID + ":" + getItemName(pResult) + pRecipeName + "_" + getItemName(itemlike));
         }
 
     }

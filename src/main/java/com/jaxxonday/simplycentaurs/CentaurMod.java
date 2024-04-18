@@ -1,8 +1,11 @@
 package com.jaxxonday.simplycentaurs;
 
+import com.jaxxonday.simplycentaurs.entity.ModEntities;
+import com.jaxxonday.simplycentaurs.entity.client.CentaurRenderer;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.entity.EntityRenderers;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
@@ -19,17 +22,21 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 // The value here should match an entry in the META-INF/mods.toml file
-@Mod(CentaurMod.MODID)
+@Mod(CentaurMod.MOD_ID)
 public class CentaurMod {
     // Define mod id in a common place for everything to reference
-    public static final String MODID = "simplycentaurs";
+    public static final String MOD_ID = "simplycentaurs";
     // Directly reference a slf4j logger
     private static final Logger LOGGER = LogUtils.getLogger();
     public CentaurMod()
     {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
+        // Items
         ModItems.register(modEventBus);
+
+        // Entities
+        ModEntities.register(modEventBus);
 
         // Register the commonSetup method for modloading
         modEventBus.addListener(this::commonSetup);
@@ -63,13 +70,14 @@ public class CentaurMod {
     }
 
     // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
-    @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+    @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents
     {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event) {
-            LOGGER.info("EXPERIMENT");
-            LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+            EntityRenderers.register(ModEntities.CENTAUR.get(), CentaurRenderer::new);
+            LOGGER.info("SIMPLY CENTAURS");
+            LOGGER.info("MINECRAFT >> {}", Minecraft.getInstance().getUser().getName());
         }
     }
 }
