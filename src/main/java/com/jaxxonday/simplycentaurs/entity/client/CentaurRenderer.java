@@ -14,6 +14,7 @@ public class CentaurRenderer extends MobRenderer<CentaurEntity, CentaurModel<Cen
         this.addLayer(new CentaurBottomVariantRenderLayer(this));
         this.addLayer(new CentaurTopVariantRenderLayer(this));
         this.addLayer(new CentaurArmorRenderLayer(this));
+        this.addLayer(new CentaurSaddleRenderLayer(this));
     }
 
     @Override

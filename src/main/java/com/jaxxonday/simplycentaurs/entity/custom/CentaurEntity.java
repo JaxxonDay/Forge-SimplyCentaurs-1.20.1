@@ -3,6 +3,7 @@ package com.jaxxonday.simplycentaurs.entity.custom;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
@@ -31,6 +32,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
     private static final EntityDataAccessor<Integer> DATA_ARMOR = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DATA_IS_SADDLED = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
+
     public final AnimationState idleAnimationState = new AnimationState();
     private int idleAnimationTimeout = 0;
 
@@ -52,6 +55,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_ARMOR, 0);
+        this.entityData.define(DATA_IS_SADDLED, false);
     }
 
     @Override
@@ -119,12 +123,23 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         ItemStack itemStack = pPlayer.getItemInHand(pHand);
 
         if(itemStack.isEmpty()) {
+            if(isSaddled()) {
+                unequipSaddle();
+                return InteractionResult.SUCCESS;
+            }
             if(getEquippedArmor() == Armor.NONE) {
                 setEquippedArmor(Armor.IRON);
             } else {
                 setEquippedArmor(Armor.NONE);
             }
             return InteractionResult.SUCCESS;
+        }
+
+        if(itemStack.is(Items.SADDLE)) {
+            if(!isSaddled()) {
+                equipSaddle(SoundSource.AMBIENT);
+                return InteractionResult.SUCCESS;
+            }
         }
 
         return InteractionResult.PASS;
@@ -139,16 +154,21 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     @Override
     public boolean isSaddleable() {
-        return false;
+        return true; //TODO: friendship mechanic
     }
 
     @Override
     public void equipSaddle(@Nullable SoundSource pSource) {
+        this.entityData.set(DATA_IS_SADDLED, true);
+        this.playSound(getSaddleSoundEvent(), 0.5f, 1f);
+    }
 
+    public void unequipSaddle() {
+        this.entityData.set(DATA_IS_SADDLED, false);
     }
 
     @Override
     public boolean isSaddled() {
-        return false;
+        return this.entityData.get(DATA_IS_SADDLED);
     }
 }
