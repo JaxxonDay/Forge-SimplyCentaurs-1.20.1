@@ -46,23 +46,23 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     public void tick() {
         super.tick();
 
-        handleTickLoadingSavedData();
+        //handleTickLoadingSavedData();
 
         if(this.level().isClientSide()) {
             runAnimationStates();
         }
     }
 
-    private void handleTickLoadingSavedData() {
-        // Only executes if we haven't loaded save data
-        if(!this.loadedSaveData) {
-            return;
-        }
-
-        if(getGender() <= 0 && !this.hasBeenAddedBefore) {
-            setGender(this.random.nextInt(2) + 1);
-        }
-    }
+//    private void handleTickLoadingSavedData() {
+//        // Only executes if we haven't loaded save data
+//        if(!this.loadedSaveData) {
+//            return;
+//        }
+//
+//        if(getGender() <= 0 && !this.hasBeenAddedBefore) {
+//            setGender(this.random.nextInt(2) + 1);
+//        }
+//    }
 
 
     private void runAnimationStates() {

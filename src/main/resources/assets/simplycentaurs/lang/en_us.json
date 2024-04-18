@@ -3,6 +3,8 @@
   "item.simplycentaurs.iron_centaur_armor": "Iron Centaur Armor",
   "item.simplycentaurs.golden_centaur_armor": "Golden Centaur Armor",
   "item.simplycentaurs.diamond_centaur_armor": "Diamond Centaur Armor",
+s
+  "item.simplycentaurs.centaur_spawn_egg": "Centaur Spawn Egg",
 
-  "item.simplycentaurs.centaur_spawn_egg": "Centaur Spawn Egg"
+  "entity.simplycentaurs.centaur": "Centaur"
 }
