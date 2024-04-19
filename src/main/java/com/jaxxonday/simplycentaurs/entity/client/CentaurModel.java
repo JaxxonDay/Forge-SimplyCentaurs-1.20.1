@@ -13,25 +13,32 @@ import net.minecraft.world.entity.Entity;
 
 public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 	private int savedGender = 0;
-	private final ModelPart centaur;
-	public final ModelPart head;
-	private final ModelPart waist;
-	private final ModelPart chest;
+	public ModelPart centaur;
+	public ModelPart body;
+	public ModelPart frontBody;
+	public ModelPart head;
+	public ModelPart waist;
+	public ModelPart chest;
 	private final ModelPart chestMale;
 	private final ModelPart chestFemale;
 	private final ModelPart waistMale;
 	private final ModelPart waistFemale;
-	private final ModelPart rArm;
-	private final ModelPart lArm;
+	public ModelPart rArm;
+	public ModelPart lArm;
 	private final ModelPart rArmMale;
 	private final ModelPart rArmFemale;
 
 	private final ModelPart lArmMale;
 	private final ModelPart lArmFemale;
 
+	public ModelPart rHandWeapon;
+	//public final ModelPart lHandWeapon;
+
 	public CentaurModel(ModelPart root) {
 		this.centaur = root.getChild("centaur");
-		this.waist = this.centaur.getChild("body").getChild("front_body").getChild("waist");
+		this.body = this.centaur.getChild("body");
+		this.frontBody = this.body.getChild("front_body");
+		this.waist = this.frontBody.getChild("waist");
 		this.waistMale = this.waist.getChild("waist_male");
 		this.waistFemale = this.waist.getChild("waist_fem");
 		this.chest = this.waist.getChild("chest");
@@ -46,6 +53,9 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 		this.lArmMale = this.lArm.getChild("l_arm_male");
 		this.lArmFemale = this.lArm.getChild("l_arm_fem");
+
+		this.rHandWeapon= this.rArm.getChild("r_hand_weapon");
+		//this.lHandWeapon = this.lArm.getChild("l_hand_weapon");
 	}
 
 	public static LayerDefinition createBodyLayer() {
@@ -65,12 +75,12 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		PartDefinition frontlegs = front_torso.addOrReplaceChild("frontlegs", CubeListBuilder.create(), PartPose.offset(1.5F, 5.0F, 0.0F));
 
 		PartDefinition r_leg = frontlegs.addOrReplaceChild("r_leg", CubeListBuilder.create().texOffs(0, 60).addBox(-1.4F, 0.0F, -1.5F, 3.0F, 14.0F, 3.0F, new CubeDeformation(-0.001F))
-		.texOffs(-1, 77).addBox(-1.5F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(-3.0F, 1.0F, 0.0F));
+				.texOffs(-1, 77).addBox(-1.5F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(-3.0F, 1.0F, 0.0F));
 
 		PartDefinition armor_r_leg = r_leg.addOrReplaceChild("armor_r_leg", CubeListBuilder.create().texOffs(78, 93).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 11.0F, 3.0F, new CubeDeformation(0.35F)), PartPose.offset(0.1F, 0.0F, 0.0F));
 
 		PartDefinition l_leg = frontlegs.addOrReplaceChild("l_leg", CubeListBuilder.create().texOffs(13, 60).addBox(-1.4F, 0.0F, -1.5F, 3.0F, 14.0F, 3.0F, new CubeDeformation(-0.001F))
-		.texOffs(13, 77).addBox(-1.5F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(0.0F, 1.0F, 0.0F));
+				.texOffs(13, 77).addBox(-1.5F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(0.0F, 1.0F, 0.0F));
 
 		PartDefinition armor_l_leg = l_leg.addOrReplaceChild("armor_l_leg", CubeListBuilder.create().texOffs(91, 93).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 11.0F, 3.0F, new CubeDeformation(0.35F)), PartPose.offset(0.1F, 0.0F, 0.0F));
 
@@ -127,14 +137,14 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		PartDefinition head = chest.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 20).addBox(-3.0F, -7.0F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -4.0F, -1.0F));
 
 		PartDefinition armor_helmet = head.addOrReplaceChild("armor_helmet", CubeListBuilder.create().texOffs(65, 0).addBox(-4.0F, -9.0F, -4.0F, 8.0F, 9.0F, 8.0F, new CubeDeformation(0.2F))
-		.texOffs(65, 18).addBox(-4.0F, -11.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
-		.texOffs(73, 18).addBox(2.0F, -11.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+				.texOffs(65, 18).addBox(-4.0F, -11.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
+				.texOffs(73, 18).addBox(2.0F, -11.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
 		PartDefinition hair = head.addOrReplaceChild("hair", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -9.0F, -4.0F, 8.0F, 12.0F, 8.0F, new CubeDeformation(0.0F))
-		.texOffs(24, 0).addBox(-3.0F, -10.0F, -3.0F, 6.0F, 1.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 1.0F, 0.0F));
+				.texOffs(24, 0).addBox(-3.0F, -10.0F, -3.0F, 6.0F, 1.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 1.0F, 0.0F));
 
 		PartDefinition ears = head.addOrReplaceChild("ears", CubeListBuilder.create().texOffs(52, 2).addBox(-4.0F, -2.5F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(-0.1F))
-		.texOffs(52, 8).addBox(2.0F, -2.5F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(-0.1F)), PartPose.offset(0.0F, -8.5F, 0.0F));
+				.texOffs(52, 8).addBox(2.0F, -2.5F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(-0.1F)), PartPose.offset(0.0F, -8.5F, 0.0F));
 
 		PartDefinition rear_body = body.addOrReplaceChild("rear_body", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, 1.0F));
 
@@ -151,12 +161,12 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		PartDefinition backlegs = rear_torso.addOrReplaceChild("backlegs", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, 0.0F));
 
 		PartDefinition l_leg2 = backlegs.addOrReplaceChild("l_leg2", CubeListBuilder.create().texOffs(39, 60).addBox(-1.4F, 0.0F, -1.5F, 3.0F, 14.0F, 3.0F, new CubeDeformation(-0.001F))
-		.texOffs(39, 77).addBox(-1.4F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(1.5F, 3.0F, 0.0F));
+				.texOffs(39, 77).addBox(-1.4F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(1.5F, 3.0F, 0.0F));
 
 		PartDefinition armor_l_leg2 = l_leg2.addOrReplaceChild("armor_l_leg2", CubeListBuilder.create().texOffs(91, 78).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 11.0F, 3.0F, new CubeDeformation(0.35F)), PartPose.offset(0.1F, 0.0F, 0.0F));
 
 		PartDefinition r_leg2 = backlegs.addOrReplaceChild("r_leg2", CubeListBuilder.create().texOffs(26, 60).addBox(-1.4F, 0.0F, -1.5F, 3.0F, 14.0F, 3.0F, new CubeDeformation(-0.001F))
-		.texOffs(26, 77).addBox(-1.5F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(-1.5F, 3.0F, 0.0F));
+				.texOffs(26, 77).addBox(-1.5F, 10.7F, -1.5F, 3.0F, 3.0F, 3.0F, new CubeDeformation(0.31F)), PartPose.offset(-1.5F, 3.0F, 0.0F));
 
 		PartDefinition armor_r_leg2 = r_leg2.addOrReplaceChild("armor_r_leg2", CubeListBuilder.create().texOffs(78, 78).addBox(-1.5F, 0.0F, -1.5F, 3.0F, 11.0F, 3.0F, new CubeDeformation(0.35F)), PartPose.offset(0.1F, 0.0F, 0.0F));
 
@@ -172,10 +182,9 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 		CentaurEntity centaurEntity = ((CentaurEntity) entity);
 
-
-
 		this.animateWalk(CentaurAnimationDefinitions.WALK, limbSwing, limbSwingAmount, 1.5f, 2.5f);
-		this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 1f);
+		this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 0.5f);
+		//this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 2f);
 	}
 
 	private void applyHeadRotation(float pNetHeadYaw, float pHeadPitch) {
@@ -217,7 +226,26 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 	@Override
 	public void renderToBuffer(PoseStack poseStack, VertexConsumer vertexConsumer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-		centaur.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+		this.centaur.render(poseStack, vertexConsumer, packedLight, packedOverlay, red, green, blue, alpha);
+	}
+
+	public PoseStack applyPoseStackTransformations(PoseStack poseStack, boolean applyRHandWeapon) {
+		this.centaur.translateAndRotate(poseStack);
+		this.body.translateAndRotate(poseStack);
+		this.frontBody.translateAndRotate(poseStack);
+		this.waist.translateAndRotate(poseStack);
+		this.chest.translateAndRotate(poseStack);
+		this.rArm.translateAndRotate(poseStack);
+		if(applyRHandWeapon) {
+			this.rHandWeapon.translateAndRotate(poseStack);
+		}
+		return poseStack;
+	}
+
+
+	public PoseStack applyRHandWeaponTransformation(PoseStack poseStack) {
+		this.rHandWeapon.translateAndRotate(poseStack);
+		return poseStack;
 	}
 
 	@Override

@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.entity.LivingEntityRenderer;
 import net.minecraft.client.renderer.entity.RenderLayerParent;
 import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.player.Player;
 
 public class CentaurTopVariantRenderLayer extends RenderLayer<CentaurEntity, CentaurModel<CentaurEntity>> {
     private static final ResourceLocation FEMALE_VARIANT_0_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/variant/centaur_texture_fem_top0.png");
@@ -24,15 +25,20 @@ public class CentaurTopVariantRenderLayer extends RenderLayer<CentaurEntity, Cen
         VertexConsumer vertexConsumer = null;
 
         if(pCentaurEntity.getGender() == 1) {
-            vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(FEMALE_VARIANT_0_TEXTURE));
+            vertexConsumer = pBuffer.getBuffer(RenderType.entityTranslucent(FEMALE_VARIANT_0_TEXTURE));
         } else if(pCentaurEntity.getGender() == 2) {
-            vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(MALE_VARIANT_0_TEXTURE));
+            vertexConsumer = pBuffer.getBuffer(RenderType.entityTranslucent(MALE_VARIANT_0_TEXTURE));
         }
 
         if(vertexConsumer == null) {
             return;
         }
 
-        getParentModel().renderToBuffer(pPoseStack, vertexConsumer, pPackedLight, LivingEntityRenderer.getOverlayCoords(pCentaurEntity, 0.0F), 1.0F, 1.0F, 1.0F, 1.0F);
+        float alpha = 1.0f;
+        //if(pCentaurEntity.getFirstPassenger() instanceof Player) {
+        //    alpha = 0.3f;
+        //}
+
+        getParentModel().renderToBuffer(pPoseStack, vertexConsumer, pPackedLight, LivingEntityRenderer.getOverlayCoords(pCentaurEntity, 0.0F), 1.0F, 1.0F, 1.0F, alpha);
     }
 }

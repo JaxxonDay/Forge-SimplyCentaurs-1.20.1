@@ -5,6 +5,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -95,7 +96,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private void runAnimationStates() {
         if(this.idleAnimationTimeout <= 0) {
-            this.idleAnimationTimeout = 40;
+            this.idleAnimationTimeout = 80;
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimeout;
@@ -123,10 +124,16 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         ItemStack itemStack = pPlayer.getItemInHand(pHand);
 
         if(itemStack.isEmpty()) {
-            if(isSaddled()) {
-                unequipSaddle();
+            if(pPlayer.isCrouching()) {
+                if(isSaddled()) {
+                    unequipSaddle();
+                    return InteractionResult.SUCCESS;
+                }
+            } else if(isSaddled()) {
+                doPlayerRide(pPlayer);
                 return InteractionResult.SUCCESS;
             }
+
             if(getEquippedArmor() == Armor.NONE) {
                 setEquippedArmor(Armor.IRON);
             } else {
@@ -144,6 +151,35 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
         return InteractionResult.PASS;
 
+    }
+
+    protected void doPlayerRide(Player pPlayer) {
+        if (!this.level().isClientSide) {
+            pPlayer.setYRot(this.getYRot());
+            pPlayer.setXRot(this.getXRot());
+            pPlayer.startRiding(this);
+        }
+    }
+
+    @Override
+    protected void positionRider(Entity pPassenger, MoveFunction pCallback) {
+        super.positionRider(pPassenger, pCallback);
+        float standAnimO = 0.7F; //+ this.ridePositionBoost;
+        float f = Mth.sin(this.yBodyRot * ((float)Math.PI / 180F));
+        float f1 = Mth.cos(this.yBodyRot * ((float)Math.PI / 180F));
+        float f2 = 0.7F * standAnimO;
+        float f3 = 0.15F * standAnimO;
+        pCallback.accept(pPassenger, this.getX() + (double)(f2 * f), this.getY() + this.getPassengersRidingOffset() + pPassenger.getMyRidingOffset() + (double)f3, this.getZ() - (double)(f2 * f1));
+        if (pPassenger instanceof LivingEntity) {
+            ((LivingEntity)pPassenger).yBodyRot = this.yBodyRot;
+        }
+    }
+
+    @Override
+    public double getPassengersRidingOffset() {
+        double height = super.getPassengersRidingOffset() * 0.55D;
+        //height += this.heightBoost;
+        return height;
     }
 
     // Saddle Data
