@@ -12,8 +12,8 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
 
 public class CentaurTopVariantRenderLayer extends RenderLayer<CentaurEntity, CentaurModel<CentaurEntity>> {
-    private static final ResourceLocation FEMALE_VARIANT_0_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/variant/centaur_texture_top0.png");
-
+    private static final ResourceLocation FEMALE_VARIANT_0_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/variant/centaur_texture_fem_top0.png");
+    private static final ResourceLocation MALE_VARIANT_0_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/variant/centaur_texture_male_top0.png");
 
     public CentaurTopVariantRenderLayer(RenderLayerParent<CentaurEntity, CentaurModel<CentaurEntity>> pRenderer) {
         super(pRenderer);
@@ -23,8 +23,10 @@ public class CentaurTopVariantRenderLayer extends RenderLayer<CentaurEntity, Cen
     public void render(PoseStack pPoseStack, MultiBufferSource pBuffer, int pPackedLight, CentaurEntity pCentaurEntity, float pLimbSwing, float pLimbSwingAmount, float pPartialTick, float pAgeInTicks, float pNetHeadYaw, float pHeadPitch) {
         VertexConsumer vertexConsumer = null;
 
-        if(true) { //TODO: Add variant detection
+        if(pCentaurEntity.getGender() == 1) {
             vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(FEMALE_VARIANT_0_TEXTURE));
+        } else if(pCentaurEntity.getGender() == 2) {
+            vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(MALE_VARIANT_0_TEXTURE));
         }
 
         if(vertexConsumer == null) {
