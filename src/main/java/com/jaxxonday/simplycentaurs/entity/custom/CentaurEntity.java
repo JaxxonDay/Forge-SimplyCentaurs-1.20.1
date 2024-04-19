@@ -175,9 +175,10 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         }
     }
 
+
     @Override
     public double getPassengersRidingOffset() {
-        double height = super.getPassengersRidingOffset() * 0.55D;
+        double height = super.getPassengersRidingOffset() * 0.565D;
         //height += this.heightBoost;
         return height;
     }
