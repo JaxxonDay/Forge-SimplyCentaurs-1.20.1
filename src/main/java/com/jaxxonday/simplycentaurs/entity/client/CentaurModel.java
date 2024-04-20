@@ -112,7 +112,7 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 		PartDefinition armor_chestplate_top_male = chest_male.addOrReplaceChild("armor_chestplate_top_male", CubeListBuilder.create().texOffs(98, 25).addBox(-3.0F, -7.0F, -1.5F, 6.0F, 5.0F, 4.0F, new CubeDeformation(0.2F)), PartPose.offset(0.0F, 3.0F, -1.5F));
 
-		PartDefinition r_arm = chest.addOrReplaceChild("r_arm", CubeListBuilder.create().texOffs(0, 0).addBox(-1.0F, 11.0F, -2.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(-4.0F, -3.5F, -1.0F));
+		PartDefinition r_arm = chest.addOrReplaceChild("r_arm", CubeListBuilder.create(), PartPose.offset(-4.0F, -3.5F, -1.0F));
 
 		PartDefinition r_arm_fem = r_arm.addOrReplaceChild("r_arm_fem", CubeListBuilder.create().texOffs(0, 43).addBox(-1.0F, -0.5F, -1.0F, 2.0F, 13.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
@@ -124,7 +124,7 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 		PartDefinition r_hand_weapon = r_arm.addOrReplaceChild("r_hand_weapon", CubeListBuilder.create().texOffs(0, 4).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offsetAndRotation(0.0F, 11.5F, 0.0F, 1.5708F, 0.0F, 0.0F));
 
-		PartDefinition l_arm = chest.addOrReplaceChild("l_arm", CubeListBuilder.create().texOffs(0, 0).addBox(-1.0F, 11.0F, -2.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(4.0F, -3.5F, -1.0F));
+		PartDefinition l_arm = chest.addOrReplaceChild("l_arm", CubeListBuilder.create(), PartPose.offset(4.0F, -3.5F, -1.0F));
 
 		PartDefinition l_arm_fem = l_arm.addOrReplaceChild("l_arm_fem", CubeListBuilder.create().texOffs(9, 43).addBox(-1.0F, -0.5F, -1.0F, 2.0F, 13.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
@@ -134,17 +134,19 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 
 		PartDefinition armor_l_shoulder_pad_male = l_arm_male.addOrReplaceChild("armor_l_shoulder_pad_male", CubeListBuilder.create().texOffs(74, 27).addBox(-0.6F, -1.5F, -1.0F, 2.0F, 3.0F, 2.0F, new CubeDeformation(0.41F)), PartPose.offset(-0.4F, 1.0F, 0.0F));
 
+		PartDefinition l_hand_weapon = l_arm.addOrReplaceChild("l_hand_weapon", CubeListBuilder.create().texOffs(0, 4).addBox(-1.0F, -1.0F, -1.0F, 2.0F, 2.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 11.5F, 0.0F));
+
 		PartDefinition head = chest.addOrReplaceChild("head", CubeListBuilder.create().texOffs(0, 20).addBox(-3.0F, -7.0F, -3.0F, 6.0F, 6.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, -4.0F, -1.0F));
 
 		PartDefinition armor_helmet = head.addOrReplaceChild("armor_helmet", CubeListBuilder.create().texOffs(65, 0).addBox(-4.0F, -9.0F, -4.0F, 8.0F, 9.0F, 8.0F, new CubeDeformation(0.2F))
-				.texOffs(65, 18).addBox(-4.0F, -11.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
-				.texOffs(73, 18).addBox(2.0F, -11.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
+				.texOffs(65, 18).addBox(-4.0F, -10.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F))
+				.texOffs(73, 18).addBox(2.0F, -10.0F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 0.0F, 0.0F));
 
 		PartDefinition hair = head.addOrReplaceChild("hair", CubeListBuilder.create().texOffs(0, 0).addBox(-4.0F, -9.0F, -4.0F, 8.0F, 12.0F, 8.0F, new CubeDeformation(0.0F))
 				.texOffs(24, 0).addBox(-3.0F, -10.0F, -3.0F, 6.0F, 1.0F, 6.0F, new CubeDeformation(0.0F)), PartPose.offset(0.0F, 1.0F, 0.0F));
 
 		PartDefinition ears = head.addOrReplaceChild("ears", CubeListBuilder.create().texOffs(52, 2).addBox(-4.0F, -2.5F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(-0.1F))
-				.texOffs(52, 8).addBox(2.0F, -2.5F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(-0.1F)), PartPose.offset(0.0F, -8.5F, 0.0F));
+				.texOffs(52, 8).addBox(2.0F, -2.5F, -1.0F, 2.0F, 4.0F, 2.0F, new CubeDeformation(-0.1F)), PartPose.offset(0.0F, -7.5F, 0.0F));
 
 		PartDefinition rear_body = body.addOrReplaceChild("rear_body", CubeListBuilder.create(), PartPose.offset(0.0F, 0.0F, 1.0F));
 
