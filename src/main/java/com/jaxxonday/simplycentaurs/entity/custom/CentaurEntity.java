@@ -1,9 +1,11 @@
 package com.jaxxonday.simplycentaurs.entity.custom;
 
+import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
@@ -19,6 +21,7 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SaddleItem;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
@@ -104,8 +107,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     public void tick() {
         super.tick();
 
-        //handleTickLoadingSavedData();
-
         if(this.level().isClientSide()) {
             runAnimationStates();
         }
@@ -137,64 +138,100 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     @Override
     protected InteractionResult mobInteract(Player pPlayer, InteractionHand pHand) {
-        //return super.mobInteract(pPlayer, pHand);
 
         ItemStack itemStack = pPlayer.getItemInHand(pHand);
 
-        if(itemStack.isEmpty()) {
-            if(pPlayer.isCrouching()) {
-                if(isSaddled()) {
-                    unequipSaddle();
-                    return InteractionResult.SUCCESS;
-                }
-            } else if(isSaddled()) {
-                doPlayerRide(pPlayer);
-                return InteractionResult.SUCCESS;
-            }
-
-            if(getEquippedArmor() == Armor.NONE) {
-                setEquippedArmor(Armor.IRON);
-            } else {
-                setEquippedArmor(Armor.NONE);
-            }
+        if(handleSaddlePlacement(pPlayer, pHand, itemStack)) {
             return InteractionResult.SUCCESS;
         }
 
-        if(itemStack.is(Items.SADDLE)) {
-            if(!isSaddled()) {
-                equipSaddle(SoundSource.AMBIENT);
-                return InteractionResult.SUCCESS;
-            }
+        if(handleArmorPlacement(pPlayer, pHand, itemStack)) {
+            return InteractionResult.SUCCESS;
         }
 
         return InteractionResult.PASS;
-
     }
 
-//    @Override
-//    public void travel(Vec3 pTravelVector) {
-//        if (this.isBeingRidden() && this.getFirstPassenger() instanceof Player player) {
-//
-//            float forward = player.zza;  // Forward key input from the player
-//            float strafe = player.xxa;   // Strafe key input from the player
-//
-//            if(forward != 0.0f || strafe != 0.0f) {
-//                this.setRotLerp(player.getYRot(), this.getXRot(), 0.3f);
-//                //this.setYRot(player.getYRot());
-//                //this.yBodyRot = player.getYRot();
-//                //this.yHeadRot = player.getYHeadRot();
-//                this.yHeadRot = Mth.rotLerp(0.3f, this.yHeadRot, player.getYHeadRot());
+
+    private boolean handleSaddlePlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(itemStack.isEmpty() && pPlayer.isCrouching() && isSaddled()) {
+            unequipSaddle();
+            dropItem(new ItemStack(Items.SADDLE));
+            return true;
+        } else if(itemStack.isEmpty() && !pPlayer.isCrouching() && isSaddled()) {
+            doPlayerRide(pPlayer);
+            return true;
+        } else if(itemStack.is(Items.SADDLE) && !isSaddled()) {
+            equipSaddle(SoundSource.BLOCKS);
+            usePlayerItem(pPlayer, pHand, itemStack, true);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean handleArmorPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(itemStack.isEmpty() && pPlayer.isCrouching() && isArmored()) {
+//            switch (getEquippedArmor()) {
+//                case LEATHER :
+//                    this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 0.7f);
+//                    dropItem(new ItemStack(ModItems.LEATHER_CENTAUR_ARMOR.get()));
+//                case IRON :
+//                    this.playSound(SoundEvents.ARMOR_EQUIP_IRON, 0.5f, 0.7f);
+//                    dropItem(new ItemStack(ModItems.IRON_CENTAUR_ARMOR.get()));
+//                case GOLDEN :
+//                    this.playSound(SoundEvents.ARMOR_EQUIP_GOLD, 0.5f, 0.7f);
+//                    dropItem(new ItemStack(ModItems.GOLDEN_CENTAUR_ARMOR.get()));
+//                case DIAMOND :
+//                    this.playSound(SoundEvents.ARMOR_EQUIP_DIAMOND, 0.5f, 0.7f);
+//                    dropItem(new ItemStack(ModItems.DIAMOND_CENTAUR_ARMOR.get()));
 //            }
-//
-//            //this.setXRot(player.getXRot() * 0.5f); // You may adjust or remove this line based on your requirements
-//            // Set the centaur's speed and movement direction based on the player
-//
-//            setSpeed((float) this.getAttributeValue(Attributes.MOVEMENT_SPEED));
-//            super.travel(new Vec3(strafe, pTravelVector.y, forward));  // Apply the player's movement input
-//        } else {
-//            super.travel(pTravelVector);  // Normal movement
-//        }
-//    }
+
+            Armor equippedArmor = getEquippedArmor();
+            if(equippedArmor == Armor.LEATHER) {
+                this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 0.7f);
+                dropItem(new ItemStack(ModItems.LEATHER_CENTAUR_ARMOR.get()));
+            } else if(equippedArmor == Armor.IRON) {
+                this.playSound(SoundEvents.ARMOR_EQUIP_IRON, 0.5f, 0.7f);
+                dropItem(new ItemStack(ModItems.IRON_CENTAUR_ARMOR.get()));
+            } else if(equippedArmor == Armor.GOLDEN) {
+                this.playSound(SoundEvents.ARMOR_EQUIP_GOLD, 0.5f, 0.7f);
+                dropItem(new ItemStack(ModItems.GOLDEN_CENTAUR_ARMOR.get()));
+            } else if(equippedArmor == Armor.DIAMOND) {
+                this.playSound(SoundEvents.ARMOR_EQUIP_DIAMOND, 0.5f, 0.7f);
+                dropItem(new ItemStack(ModItems.DIAMOND_CENTAUR_ARMOR.get()));
+            }
+
+            setEquippedArmor(Armor.NONE);
+            return true;
+        }
+
+        if(!pPlayer.isCrouching() && !isArmored()) {
+            boolean equipped = false;
+            if(itemStack.is(ModItems.LEATHER_CENTAUR_ARMOR.get())) {
+                setEquippedArmor(Armor.LEATHER);
+                this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 1f);
+                equipped = true;
+            } else if(itemStack.is(ModItems.IRON_CENTAUR_ARMOR.get())) {
+                setEquippedArmor(Armor.IRON);
+                this.playSound(SoundEvents.ARMOR_EQUIP_IRON, 0.5f, 1f);
+                equipped = true;
+            } else if(itemStack.is(ModItems.GOLDEN_CENTAUR_ARMOR.get())) {
+                setEquippedArmor(Armor.GOLDEN);
+                this.playSound(SoundEvents.ARMOR_EQUIP_GOLD, 0.5f, 1f);
+                equipped = true;
+            } else if(itemStack.is(ModItems.DIAMOND_CENTAUR_ARMOR.get())) {
+                setEquippedArmor(Armor.DIAMOND);
+                this.playSound(SoundEvents.ARMOR_EQUIP_DIAMOND, 0.5f, 1f);
+                equipped = true;
+            }
+            if(equipped) {
+                usePlayerItem(pPlayer, pHand, itemStack, true);
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 
     @Override
@@ -343,7 +380,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         }
     }
 
-
     @Override
     public double getPassengersRidingOffset() {
         double height = super.getPassengersRidingOffset() * 0.565D;
@@ -379,6 +415,11 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     @Override
     public boolean isSaddled() {
         return this.entityData.get(DATA_IS_SADDLED);
+    }
+
+
+    public boolean isArmored() {
+        return this.getEquippedArmor() != Armor.NONE;
     }
 
 

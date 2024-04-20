@@ -22,10 +22,12 @@ public class CentaurArmorRenderLayer extends RenderLayer<CentaurEntity, CentaurM
         VertexConsumer vertexConsumer = null;
 
         switch (pCentaurEntity.getEquippedArmor()) {
-            case NONE -> {
-                return;
-            }
-            case IRON -> vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_IRON_ARMOR_TEXTURE));
+            case NONE : return;
+            case IRON : vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_IRON_ARMOR_TEXTURE));
+        }
+
+        if(vertexConsumer == null) {
+            return;
         }
 
         getParentModel().renderToBuffer(pPoseStack, vertexConsumer, pPackedLight, LivingEntityRenderer.getOverlayCoords(pCentaurEntity, 0.0F), 1.0F, 1.0F, 1.0F, 1.0F);
