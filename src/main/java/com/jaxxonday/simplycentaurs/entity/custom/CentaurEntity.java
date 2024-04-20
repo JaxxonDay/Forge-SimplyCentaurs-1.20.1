@@ -2,9 +2,11 @@ package com.jaxxonday.simplycentaurs.entity.custom;
 
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
+import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.FluidTags;
@@ -19,11 +21,15 @@ import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.SaddleItem;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,15 +45,24 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         }
     }
 
+    public enum InventorySlot {
+        HAND, ARMOR
+    }
+
     private static final EntityDataAccessor<Integer> DATA_ARMOR = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DATA_IS_SADDLED = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
-
     private static final EntityDataAccessor<Boolean> DATA_EXTERNAL_JUMP = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_IS_AIMING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
+
+    private static final EntityDataAccessor<Boolean> DATA_IS_ATTACKING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
 
     public final AnimationState idleAnimationState = new AnimationState();
     private int idleAnimationTimeout = 0;
 
     public double heightBoost = 0.0d;
+
+    protected int gallopSoundCounter;
+    protected boolean canGallop = true;
 
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -72,12 +87,32 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.entityData.set(DATA_EXTERNAL_JUMP, pExternalJump);
     }
 
+
+    public boolean getIsAiming() {
+        return this.entityData.get(DATA_IS_AIMING);
+    }
+
+    public void setIsAiming(boolean pIsAiming) {
+        this.entityData.set(DATA_IS_AIMING, pIsAiming);
+    }
+
+    public boolean getIsAttacking() {
+        return this.entityData.get(DATA_IS_ATTACKING);
+    }
+
+    public void setIsAttacking(boolean pIsAttacking) {
+        this.entityData.set(DATA_IS_ATTACKING, pIsAttacking);
+    }
+
+
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_ARMOR, 0);
         this.entityData.define(DATA_IS_SADDLED, false);
         this.entityData.define(DATA_EXTERNAL_JUMP, false);
+        this.entityData.define(DATA_IS_AIMING, false);
+        this.entityData.define(DATA_IS_ATTACKING, false);
     }
 
     @Override
@@ -109,6 +144,12 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
         if(this.level().isClientSide()) {
             runAnimationStates();
+        } else {
+            if(isSprinting() && !isBeingRidden()) {
+                setSprinting(false);
+            } else if(getIsExternalJump() && !isBeingRidden()) {
+                setExternalJump(false);
+            }
         }
     }
 
@@ -149,7 +190,30 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             return InteractionResult.SUCCESS;
         }
 
+        if(handleItemPlacement(pPlayer, pHand, itemStack)) {
+            return InteractionResult.SUCCESS;
+        }
+
         return InteractionResult.PASS;
+    }
+
+
+    private boolean handleItemPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(itemStack.isEmpty() && pPlayer.isCrouching() && hasItemInHand()) {
+            dropItem(getHeldItem().copy());
+            unequipItem(null);
+            return true;
+        } else if(!itemStack.isEmpty() && !hasItemInHand()) {
+            equipItem(pPlayer, pHand, itemStack, null);
+            return true;
+        } else if(!itemStack.isEmpty() && hasItemInHand()) {
+            dropItem(getHeldItem().copy());
+            unequipItem(null);
+            equipItem(pPlayer, pHand, itemStack, null);
+            return true;
+        }
+
+        return false;
     }
 
 
@@ -171,21 +235,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private boolean handleArmorPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
         if(itemStack.isEmpty() && pPlayer.isCrouching() && isArmored()) {
-//            switch (getEquippedArmor()) {
-//                case LEATHER :
-//                    this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 0.7f);
-//                    dropItem(new ItemStack(ModItems.LEATHER_CENTAUR_ARMOR.get()));
-//                case IRON :
-//                    this.playSound(SoundEvents.ARMOR_EQUIP_IRON, 0.5f, 0.7f);
-//                    dropItem(new ItemStack(ModItems.IRON_CENTAUR_ARMOR.get()));
-//                case GOLDEN :
-//                    this.playSound(SoundEvents.ARMOR_EQUIP_GOLD, 0.5f, 0.7f);
-//                    dropItem(new ItemStack(ModItems.GOLDEN_CENTAUR_ARMOR.get()));
-//                case DIAMOND :
-//                    this.playSound(SoundEvents.ARMOR_EQUIP_DIAMOND, 0.5f, 0.7f);
-//                    dropItem(new ItemStack(ModItems.DIAMOND_CENTAUR_ARMOR.get()));
-//            }
-
             Armor equippedArmor = getEquippedArmor();
             if(equippedArmor == Armor.LEATHER) {
                 this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 0.7f);
@@ -291,6 +340,10 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             this.setRotLerp(pPlayer.getYRot(), (pPlayer.getXRot() * 0.5F) - 10f, 0.2f); //-10f rotates head upward
             this.yRotO = this.yBodyRot = this.getYRot();
             this.yHeadRot = pPlayer.getYHeadRot();
+        }
+
+        if (pTravelVector.z <= 0.0D) {
+            this.gallopSoundCounter = 0;
         }
 
 
@@ -421,6 +474,99 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     public boolean isArmored() {
         return this.getEquippedArmor() != Armor.NONE;
     }
+
+
+    public void equipItem(Player pPlayer, InteractionHand pHand, ItemStack itemStack, @Nullable SoundEvent soundEvent) {
+        ItemStack existingItem = this.inventory.getItem(InventorySlot.HAND.ordinal());
+
+        if(soundEvent != null) {
+            this.playSound(soundEvent, 0.5F, 1.0F);
+        }
+
+        if(existingItem != ItemStack.EMPTY) {
+            this.dropItem(existingItem.copy());
+        }
+
+        if(itemStack.getCount() > 1) {
+            this.inventory.setItem(InventorySlot.HAND.ordinal(), new ItemStack(itemStack.getItem(), 1));
+        } else {
+            this.inventory.setItem(InventorySlot.HAND.ordinal(), itemStack.copy());
+        }
+
+        this.usePlayerItem(pPlayer, pHand, itemStack, true);
+    }
+
+
+    public void unequipItem(@Nullable SoundEvent soundEvent) {
+        if(soundEvent != null) {
+            this.playSound(soundEvent, 0.5F, 0.8F);
+        }
+
+        ItemStack existingItem = this.inventory.getItem(InventorySlot.HAND.ordinal());
+        if(!existingItem.isEmpty()) {
+            this.inventory.setItem(InventorySlot.HAND.ordinal(), ItemStack.EMPTY);
+        }
+    }
+
+    public boolean hasItemInHand() {
+        ItemStack existingItem = this.inventory.getItem(InventorySlot.HAND.ordinal());
+        return existingItem != ItemStack.EMPTY;
+    }
+
+
+    public ItemStack getHeldItem() {
+        ItemStack existingItem = this.inventory.getItem(InventorySlot.HAND.ordinal());
+        return existingItem;
+    }
+
+
+    @Override
+    protected void playStepSound(BlockPos pPos, BlockState pBlock) {
+        if(random.nextInt(10) == 0) {
+            super.playStepSound(pPos, pBlock);
+            return;
+        }
+
+        if (!pBlock.liquid()) {
+            BlockState blockstate = this.level().getBlockState(pPos.above());
+            SoundType soundtype = pBlock.getSoundType(level(), pPos, this);
+            if (blockstate.is(Blocks.SNOW)) {
+                soundtype = blockstate.getSoundType(level(), pPos, this);
+            }
+
+            if (this.isVehicle() && this.canGallop) {
+                ++this.gallopSoundCounter;
+                if(this.gallopSoundCounter > 5 && this.gallopSoundCounter % 3 == 0 && this.random.nextBoolean()) {
+                    this.playGallopSound(soundtype);
+                }
+                int type = this.random.nextInt(2);
+                if(type == 0) {
+                    this.playSound(SoundEvents.HORSE_STEP, soundtype.getVolume() * 0.05F, soundtype.getPitch());
+                } else if(type == 1) {
+                    this.playSound(SoundEvents.HORSE_STEP_WOOD, soundtype.getVolume() * 0.05F, soundtype.getPitch());
+                }
+            } else if (this.isWoodSoundType(soundtype)) {
+                this.gallopSoundCounter = 0;
+                this.playSound(SoundEvents.HORSE_STEP_WOOD, soundtype.getVolume() * 0.05F, soundtype.getPitch());
+            } else {
+                this.gallopSoundCounter = 0;
+                this.playSound(SoundEvents.HORSE_STEP, soundtype.getVolume() * 0.05F, soundtype.getPitch());
+            }
+
+        }
+    }
+
+
+    protected void playGallopSound(SoundType pSoundType) {
+        this.playSound(SoundEvents.HORSE_GALLOP, pSoundType.getVolume() * 0.05F, pSoundType.getPitch() + 0.2f);
+    }
+
+
+    private boolean isWoodSoundType(SoundType pSoundType) {
+        return pSoundType == SoundType.WOOD || pSoundType == SoundType.NETHER_WOOD || pSoundType == SoundType.STEM || pSoundType == SoundType.CHERRY_WOOD || pSoundType == SoundType.BAMBOO_WOOD;
+    }
+
+
 
 
     private void setRotLerp(float pYRot, float pXRot, float delta) {

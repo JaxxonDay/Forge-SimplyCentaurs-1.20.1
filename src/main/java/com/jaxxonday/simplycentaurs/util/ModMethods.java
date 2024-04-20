@@ -2,6 +2,7 @@ package com.jaxxonday.simplycentaurs.util;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.item.*;
 import net.minecraft.world.phys.Vec3;
 
 import static java.lang.Math.round;
@@ -39,5 +40,23 @@ public class ModMethods {
         }
 
         return false;
+    }
+
+
+    public static boolean isWeapon(ItemStack itemStack) {
+        Item item = itemStack.getItem();
+        return item instanceof SwordItem ||
+                item instanceof AxeItem ||
+                item instanceof TridentItem; // Add more as needed
+    }
+
+    public static boolean isHandheldRender(ItemStack itemStack) {
+        if(isWeapon(itemStack)) {
+            return true;
+        }
+        Item item = itemStack.getItem();
+        return item instanceof PickaxeItem ||
+                item instanceof HoeItem ||
+                item instanceof ShovelItem;
     }
 }

@@ -6,6 +6,7 @@ import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.ContainerListener;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.player.Player;
@@ -15,10 +16,16 @@ import net.minecraft.world.level.Level;
 public abstract class ModAbstractSmartCreature extends PathfinderMob implements ContainerListener {
     private static final EntityDataAccessor<Integer> DATA_GENDER = SynchedEntityData.defineId(ModAbstractSmartCreature.class, EntityDataSerializers.INT);
     private int variant = 0;
+
+    protected SimpleContainer inventory;
+
+    private net.minecraftforge.common.util.LazyOptional<?> itemHandler = null;
     protected boolean loadedSaveData = false;
     protected boolean hasBeenAddedBefore = false;
+
     protected ModAbstractSmartCreature(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+        this.createInventory();
     }
 
     @Override
@@ -51,6 +58,32 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
         this.loadedSaveData = true;
     }
 
+
+    protected int getInventorySize() {
+        return 2;
+    }
+
+
+    protected void createInventory() {
+        SimpleContainer simplecontainer = this.inventory;
+        this.inventory = new SimpleContainer(this.getInventorySize());
+        if (simplecontainer != null) {
+            simplecontainer.removeListener(this);
+            int i = Math.min(simplecontainer.getContainerSize(), this.inventory.getContainerSize());
+
+            for(int j = 0; j < i; ++j) {
+                ItemStack itemstack = simplecontainer.getItem(j);
+                if (!itemstack.isEmpty()) {
+                    this.inventory.setItem(j, itemstack.copy());
+                }
+            }
+        }
+
+        this.inventory.addListener(this);
+        //this.updateContainerEquipment();
+        this.itemHandler = net.minecraftforge.common.util.LazyOptional.of(() -> new net.minecraftforge.items.wrapper.InvWrapper(this.inventory));
+    }
+
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
@@ -58,6 +91,22 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
             this.getPersistentData().putBoolean("HasBeenAddedBefore", true);
             this.setGender(this.random.nextInt(2) + 1);
             this.setVariant(this.random.nextInt(5));
+        }
+    }
+
+    @Override
+    public boolean removeWhenFarAway(double pDistanceToClosestPlayer) {
+        return false;
+    }
+
+
+    @Override
+    public void invalidateCaps() {
+        super.invalidateCaps();
+        if (itemHandler != null) {
+            net.minecraftforge.common.util.LazyOptional<?> oldHandler = itemHandler;
+            itemHandler = null;
+            oldHandler.invalidate();
         }
     }
 
