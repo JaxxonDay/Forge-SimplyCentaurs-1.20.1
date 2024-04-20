@@ -181,9 +181,16 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		this.applyHeadRotation(netHeadYaw, headPitch);
 
 		CentaurEntity centaurEntity = ((CentaurEntity) entity);
+		if(centaurEntity.isBeingRidden()) {
+			this.animateWalk(CentaurAnimationDefinitions.WALK2, limbSwing, limbSwingAmount, 2.0f, 2.5f);
+			this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE2, ageInTicks, 0.5f);
+		} else {
+			this.animateWalk(CentaurAnimationDefinitions.WALK, limbSwing, limbSwingAmount, 1.5f, 2.5f);
+			this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 0.5f);
+		}
 
-		this.animateWalk(CentaurAnimationDefinitions.WALK, limbSwing, limbSwingAmount, 1.5f, 2.5f);
-		this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 0.5f);
+		//centaurEntity.heightBoost = (-(this.body.y) + 4.0d) * 0.0625d;
+
 		//this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 2f);
 	}
 
