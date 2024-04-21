@@ -358,11 +358,16 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     @Override
     protected Vec3 getRiddenInput(Player pPlayer, Vec3 pTravelVector) {
+        boolean gapFound = false;
+        // Defining forward input
+        double forwardInput = 1.05d;
         boolean gapOne = ModMethods.getGapBelow(this, 1.0f);
         boolean gapTwo = ModMethods.getGapBelow(this, 2.0f);
 
-        if((gapOne || gapTwo) && !getIsExternalJump()) {
-            return new Vec3(0.0d, 0.0d, 0.0d);
+        //if((gapOne || gapTwo) && !getIsExternalJump()) {
+        if((gapOne) && !getIsExternalJump()) {
+            forwardInput = 0.0d;
+            gapFound = true;
         }
 
         if(pPlayer.isSprinting()) {
@@ -372,13 +377,19 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             this.setSprinting(false);
         }
 
-        // Defining forward and side movement
-        double forwardInput = 1.05d;
+        // Defining side movement
         double sideInput = pPlayer.xxa * 0.2d;
 
         // Set to normal inputs if not sprinting
         if(!this.isSprinting()) {
-            forwardInput = pPlayer.zza;
+            // Only apply movement if gap not found
+            if(!gapFound) {
+                forwardInput = pPlayer.zza;
+            } else {
+                // There's a gap found so we lock movement to being only
+                // in reverse
+                forwardInput = Math.max(pPlayer.zza, 0.0d);
+            }
             sideInput = pPlayer.xxa * 0.7d;;
         }
 

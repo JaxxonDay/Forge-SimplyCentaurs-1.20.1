@@ -12,8 +12,12 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.resources.ResourceLocation;
 
 public class CentaurArmorRenderLayer extends RenderLayer<CentaurEntity, CentaurModel<CentaurEntity>> {
+
+    private static final ResourceLocation CENTAUR_LEATHER_ARMOR_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/armor/centaur_texture_armor_leather.png");
     private static final ResourceLocation CENTAUR_IRON_ARMOR_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/armor/centaur_texture_armor_iron.png");
     private static final ResourceLocation CENTAUR_GOLDEN_ARMOR_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/armor/centaur_texture_armor_golden.png");
+    private static final ResourceLocation CENTAUR_DIAMOND_ARMOR_TEXTURE = new ResourceLocation(CentaurMod.MOD_ID, "textures/entity/armor/centaur_texture_armor_diamond.png");
+
     public CentaurArmorRenderLayer(RenderLayerParent<CentaurEntity, CentaurModel<CentaurEntity>> pRenderer) {
         super(pRenderer);
     }
@@ -24,8 +28,18 @@ public class CentaurArmorRenderLayer extends RenderLayer<CentaurEntity, CentaurM
 
         switch (pCentaurEntity.getEquippedArmor()) {
             case NONE : return;
-            case IRON : vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_IRON_ARMOR_TEXTURE));
-            case GOLDEN : vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_GOLDEN_ARMOR_TEXTURE));
+            case LEATHER :
+                vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_LEATHER_ARMOR_TEXTURE));
+                break;
+            case IRON :
+                vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_IRON_ARMOR_TEXTURE));
+                break;
+            case GOLDEN :
+                vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_GOLDEN_ARMOR_TEXTURE));
+                break;
+            case DIAMOND:
+                vertexConsumer = pBuffer.getBuffer(RenderType.entityCutoutNoCull(CENTAUR_DIAMOND_ARMOR_TEXTURE));
+                break;
         }
 
         if(vertexConsumer == null) {
