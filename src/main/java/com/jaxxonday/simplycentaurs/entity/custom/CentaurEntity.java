@@ -1,5 +1,7 @@
 package com.jaxxonday.simplycentaurs.entity.custom;
 
+import com.jaxxonday.simplycentaurs.entity.ai.CentaurAttackGoal;
+import com.jaxxonday.simplycentaurs.entity.ai.CentaurHurtByTargetGoal;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.core.BlockPos;
@@ -18,13 +20,14 @@ import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
+import net.minecraft.world.entity.monster.*;
+import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SaddleItem;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -32,6 +35,10 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
 
 public class CentaurEntity extends ModAbstractSmartCreature implements Saddleable {
     public enum Armor {
@@ -49,6 +56,17 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         HAND, ARMOR
     }
 
+    public static final List<Class<?>> HOSTILE_TOWARDS = List.of(
+            Zombie.class,
+            Skeleton.class,
+            Phantom.class,
+            PatrollingMonster.class,
+            Silverfish.class,
+            Spider.class,
+            Blaze.class,
+            Hoglin.class
+    );
+
     private static final EntityDataAccessor<Integer> DATA_ARMOR = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.INT);
     private static final EntityDataAccessor<Boolean> DATA_IS_SADDLED = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_EXTERNAL_JUMP = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
@@ -56,17 +74,63 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private static final EntityDataAccessor<Boolean> DATA_IS_ATTACKING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
 
+    public static final UUID NO_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+
+    private static final UUID ARMOR_UUID = UUID.randomUUID();
+
+
+
+
+    private UUID friendUUID = NO_TARGET_UUID;
+    private UUID avoidEntityUUID = NO_TARGET_UUID;
+    private UUID forgivenEntityUUID = NO_TARGET_UUID;
+
+
+
+
     public final AnimationState idleAnimationState = new AnimationState();
     private int idleAnimationTimeout = 0;
+
+    public final AnimationState attackAnimationState = new AnimationState();
+    public int attackAnimationTimeout = 0;
 
     public double heightBoost = 0.0d;
 
     protected int gallopSoundCounter;
     protected boolean canGallop = true;
 
+    private int avoidTime = 0;
+
+
+
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setMaxUpStep(1.0f);
+    }
+
+
+    public UUID getFriendUUID() {
+        return this.friendUUID;
+    }
+
+    public void setFriendUUID(UUID pUuid) {
+        this.friendUUID = pUuid;
+    }
+
+    public UUID getAvoidEntityUUID() {
+        return this.avoidEntityUUID;
+    }
+
+    public void setAvoidEntityUUID(UUID pUuid) {
+        this.avoidEntityUUID = pUuid;
+    }
+
+    public UUID getForgivenEntityUUID() {
+        return this.forgivenEntityUUID;
+    }
+
+    public void setForgivenEntityUUID(UUID pUuid) {
+        this.forgivenEntityUUID = pUuid;
     }
 
 
@@ -104,6 +168,13 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.entityData.set(DATA_IS_ATTACKING, pIsAttacking);
     }
 
+    public int getAvoidTime() {
+        return this.avoidTime;
+    }
+
+    public void setAvoidTime(int pAvoidTime) {
+        this.avoidTime = pAvoidTime;
+    }
 
     @Override
     protected void defineSynchedData() {
@@ -119,20 +190,24 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
-        this.goalSelector.addGoal(2, new WaterAvoidingRandomStrollGoal(this, 1.1D));
-        this.goalSelector.addGoal(3, new LookAtPlayerGoal(this, Player.class, 10f));
-        this.goalSelector.addGoal(4, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(4, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
+        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.1D));
+        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 10f));
+        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(1, new CentaurAttackGoal(this, 1.3d, true, 6, 13, 700));
+        this.goalSelector.addGoal(2, new CentaurHurtByTargetGoal(this));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Zombie.class, true));
+
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return ModAbstractSmartCreature.createLivingAttributes()
-                .add(Attributes.MAX_HEALTH, 20d)
+                .add(Attributes.MAX_HEALTH, 30d)
                 .add(Attributes.FOLLOW_RANGE, 50d)
                 .add(Attributes.MOVEMENT_SPEED, 0.25d)
                 .add(Attributes.ARMOR_TOUGHNESS, 0.0d)
-                .add(Attributes.ATTACK_DAMAGE, 1.0d)
-                .add(Attributes.ATTACK_KNOCKBACK, 0.2d);
+                .add(Attributes.ATTACK_DAMAGE, 4.0d)
+                .add(Attributes.ATTACK_KNOCKBACK, 1.0d);
     }
 
 
@@ -143,7 +218,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         super.tick();
 
         if(this.level().isClientSide()) {
-            runAnimationStates();
+            setupAnimationStates();
         } else {
             if(isSprinting() && !isBeingRidden()) {
                 setSprinting(false);
@@ -154,15 +229,36 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-    private void runAnimationStates() {
+    private void setupAnimationStates() {
+        updateIdleAnimation();
+        updateAttackAnimation();
+    }
+
+
+    private void updateIdleAnimation() {
         if(this.idleAnimationTimeout <= 0) {
             this.idleAnimationTimeout = 80;
             this.idleAnimationState.start(this.tickCount);
         } else {
             --this.idleAnimationTimeout;
         }
-
     }
+
+
+    private void updateAttackAnimation() {
+        // For attacking animation
+        if(this.getIsAttacking() && this.attackAnimationTimeout <= 0) {
+            this.attackAnimationTimeout = 80; // Length in ticks of animation + time spacing
+            this.attackAnimationState.start(this.tickCount);
+        } else {
+            --this.attackAnimationTimeout;
+        }
+
+        if(!this.getIsAttacking()) {
+            this.attackAnimationState.stop();
+        }
+    }
+
 
     @Override
     protected void updateWalkAnimation(float pPartialTick) {

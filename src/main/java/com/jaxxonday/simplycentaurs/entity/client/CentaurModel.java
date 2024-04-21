@@ -190,15 +190,15 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 			if(centaurEntity.getIsAiming()) {
 				this.animateWalk(CentaurAnimationDefinitions.WALK_BASE, limbSwing, limbSwingAmount, 1.5f, 2.5f);
 				this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.ANY_ARM_BOW, ageInTicks, 0.5f);
-			} else if(centaurEntity.getIsAttacking()) {
-				this.animateWalk(CentaurAnimationDefinitions.WALK_BASE, limbSwing, limbSwingAmount, 1.5f, 2.5f);
-				this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 2f);
 			} else {
 				this.animateWalk(CentaurAnimationDefinitions.WALK, limbSwing, limbSwingAmount, 1.5f, 2.5f);
 				this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.IDLE, ageInTicks, 0.5f);
+				//this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 2f);
 			}
 
 		}
+
+		this.animate(centaurEntity.attackAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 3f);
 
 		//centaurEntity.heightBoost = (-(this.body.y) + 4.0d) * 0.0625d;
 
