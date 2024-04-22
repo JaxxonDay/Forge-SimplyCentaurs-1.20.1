@@ -2,6 +2,8 @@ package com.jaxxonday.simplycentaurs.entity.custom;
 
 import com.jaxxonday.simplycentaurs.entity.ai.CentaurAttackGoal;
 import com.jaxxonday.simplycentaurs.entity.ai.CentaurHurtByTargetGoal;
+import com.jaxxonday.simplycentaurs.entity.ai.CentaurNearestAttackableTargetGoal;
+import com.jaxxonday.simplycentaurs.entity.ai.CentaurRetreatGoal;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.core.BlockPos;
@@ -17,6 +19,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -26,8 +29,10 @@ import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.*;
 import net.minecraft.world.entity.monster.hoglin.Hoglin;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -37,6 +42,7 @@ import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -56,7 +62,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         HAND, ARMOR
     }
 
-    public static final List<Class<?>> HOSTILE_TOWARDS = List.of(
+    public static final List<Class<? extends LivingEntity>> HOSTILE_TOWARDS = List.of(
             Zombie.class,
             Skeleton.class,
             Phantom.class,
@@ -73,11 +79,13 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private static final EntityDataAccessor<Boolean> DATA_IS_AIMING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
 
     private static final EntityDataAccessor<Boolean> DATA_IS_ATTACKING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Boolean> DATA_IS_RETREATING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
 
     public static final UUID NO_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private static final UUID ARMOR_UUID = UUID.randomUUID();
 
+    private static final UUID ATTACK_DAMAGE_MODIFIER_UUID = UUID.randomUUID();
 
 
 
@@ -138,6 +146,10 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         return Armor.byOrdinal(this.entityData.get(DATA_ARMOR));
     }
 
+    public boolean hasArmor() {
+        return Armor.byOrdinal(this.entityData.get(DATA_ARMOR)) != Armor.NONE;
+    }
+
     public void setEquippedArmor(Armor pEquippedArmor) {
         this.entityData.set(DATA_ARMOR, pEquippedArmor.ordinal());
     }
@@ -168,6 +180,18 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.entityData.set(DATA_IS_ATTACKING, pIsAttacking);
     }
 
+
+    public boolean getIsRetreating() {
+        return this.entityData.get(DATA_IS_RETREATING);
+    }
+
+    public void setIsRetreating(boolean pIsRetreating) {
+        this.entityData.set(DATA_IS_RETREATING, pIsRetreating);
+    }
+
+
+
+
     public int getAvoidTime() {
         return this.avoidTime;
     }
@@ -184,20 +208,24 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.entityData.define(DATA_EXTERNAL_JUMP, false);
         this.entityData.define(DATA_IS_AIMING, false);
         this.entityData.define(DATA_IS_ATTACKING, false);
+        this.entityData.define(DATA_IS_RETREATING, false);
     }
 
     @Override
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(4, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
-        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.1D));
-        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 10f));
-        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
-        this.goalSelector.addGoal(1, new CentaurAttackGoal(this, 1.3d, true, 6, 13, 700));
-        this.goalSelector.addGoal(2, new CentaurHurtByTargetGoal(this));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Zombie.class, true));
+        this.goalSelector.addGoal(5, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
+        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.1D));
+        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 10f));
+        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
 
+        this.goalSelector.addGoal(1, new CentaurRetreatGoal(this, 1.5d));
+        this.goalSelector.addGoal(2, new CentaurAttackGoal(this, 1.5d, true, 6, 6, 700));
+        this.goalSelector.addGoal(3, new CentaurHurtByTargetGoal(this));
+        for (Class<? extends LivingEntity> targetClass : HOSTILE_TOWARDS) {
+            this.targetSelector.addGoal(4, new CentaurNearestAttackableTargetGoal(this, targetClass, true));
+        }
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -206,7 +234,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
                 .add(Attributes.FOLLOW_RANGE, 50d)
                 .add(Attributes.MOVEMENT_SPEED, 0.25d)
                 .add(Attributes.ARMOR_TOUGHNESS, 0.0d)
-                .add(Attributes.ATTACK_DAMAGE, 4.0d)
+                .add(Attributes.ATTACK_DAMAGE, 2.0d)
                 .add(Attributes.ATTACK_KNOCKBACK, 1.0d);
     }
 
@@ -294,6 +322,39 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
+
+    public void updateAttackAttribute() {
+        ItemStack heldItem = this.inventory.getItem(InventorySlot.HAND.ordinal()); // Check the designated slot for the item
+
+        double additionalDamage = getAdditionalDamage(heldItem);
+        if (additionalDamage != 0) {
+            AttributeModifier modifier = new AttributeModifier(ATTACK_DAMAGE_MODIFIER_UUID, "Weapon modifier", additionalDamage, AttributeModifier.Operation.ADDITION);
+            if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) == null) {
+                this.getAttribute(Attributes.ATTACK_DAMAGE).addTransientModifier(modifier);
+                System.out.println("Added Attack Damage modifier of amount " + additionalDamage);
+            }
+        } else {
+            if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) != null) {
+                this.getAttribute(Attributes.ATTACK_DAMAGE).removeModifier(ATTACK_DAMAGE_MODIFIER_UUID);
+                System.out.println("Removed Attack Damage modifier");
+            }
+        }
+    }
+
+    private double getAdditionalDamage(ItemStack itemStack) {
+        if (itemStack != null && !itemStack.isEmpty()) { // Check if itemStack is not null and not empty
+            Collection<AttributeModifier> modifiers = itemStack.getAttributeModifiers(EquipmentSlot.MAINHAND).get(Attributes.ATTACK_DAMAGE);
+            if (modifiers != null && !modifiers.isEmpty()) { // Ensure modifiers are not null or empty
+                return modifiers.stream()
+                        .filter(modifier -> modifier.getOperation() == AttributeModifier.Operation.ADDITION)
+                        .mapToDouble(AttributeModifier::getAmount)
+                        .sum();  // Sum all the addition modifiers
+            }
+        }
+        return 0;  // Return 0 if no valid modifiers are found or itemStack is null/empty
+    }
+
+
     private boolean handleItemPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
         if(itemStack.isEmpty() && pPlayer.isCrouching() && hasItemInHand()) {
             dropItem(getHeldItem().copy());
@@ -303,9 +364,15 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             equipItem(pPlayer, pHand, itemStack, null);
             return true;
         } else if(!itemStack.isEmpty() && hasItemInHand()) {
-            dropItem(getHeldItem().copy());
-            unequipItem(null);
-            equipItem(pPlayer, pHand, itemStack, null);
+            if(!ModMethods.isFoodItem(itemStack)) {
+                dropItem(getHeldItem().copy());
+                unequipItem(null);
+                equipItem(pPlayer, pHand, itemStack, null);
+            } else {
+                System.out.println("Tried placing item in inventory");
+                placeItemInInventory(pPlayer, pHand, itemStack, null);
+            }
+
             return true;
         }
 
@@ -409,6 +476,11 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             Vec3 currentVelocity = this.getDeltaMovement();
             this.setDeltaMovement(currentVelocity.x, currentVelocity.y + 0.1d, currentVelocity.z);
         }
+    }
+
+
+    public float getBaseMovementSpeed() {
+        return (float) (this.getAttributeValue(Attributes.MOVEMENT_SPEED));
     }
 
 
@@ -600,7 +672,33 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             this.inventory.setItem(InventorySlot.HAND.ordinal(), itemStack.copy());
         }
 
+        updateAttackAttribute();
+
+
         this.usePlayerItem(pPlayer, pHand, itemStack, true);
+    }
+
+    public void placeItemInInventory(Player pPlayer, InteractionHand pHand, ItemStack itemStack, @Nullable SoundEvent soundEvent) {
+
+        boolean isFoodItem = ModMethods.isFoodItem(itemStack);
+        float saturationValue = isFoodItem ? ModMethods.getSaturationValue(itemStack) * 10f : 0f;
+
+        if(isFoodItem && saturationValue >= 2.0f) {
+            ItemStack singleItemStack = new ItemStack(itemStack.getItem());
+            if(this.inventory.canAddItem(singleItemStack)) {
+                this.playSound(SoundEvents.ITEM_PICKUP, 0.5f, 1.0f);
+                this.inventory.addItem(singleItemStack);
+                this.usePlayerItem(pPlayer, pHand, itemStack, true);
+            }
+        } else {
+            //TEMP
+            if(ModMethods.isFoodItem(itemStack)) {
+                float saturationVal = ModMethods.getSaturationValue(itemStack) * 10f;
+                System.out.println("Saturation value too low for this item. Saturation is: " + saturationVal);
+            }
+            ////
+            equipItem(pPlayer, pHand, itemStack, soundEvent);
+        }
     }
 
 

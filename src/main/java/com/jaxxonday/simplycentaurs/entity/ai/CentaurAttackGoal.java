@@ -1,10 +1,13 @@
 package com.jaxxonday.simplycentaurs.entity.ai;
 
 import com.jaxxonday.simplycentaurs.entity.custom.CentaurEntity;
+import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
+import net.minecraft.world.entity.monster.Skeleton;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.phys.Vec3;
 import org.checkerframework.checker.units.qual.C;
 
@@ -20,7 +23,6 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
 
     private final int attackSpeed;
     private final int attackTimeBetween;
-
     private final int aggroTime;
 
     public CentaurAttackGoal(PathfinderMob pMob, double pSpeedModifier, boolean pFollowingTargetEvenIfNotSeen, int pAttackSpeed, int pAttackTimeBetween, int pAggroCooldown) {
@@ -125,6 +127,16 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
 
     @Override
     public boolean canUse() {
+
+//        if(this.centaurEntity.level().isClientSide()) {
+//            return false;
+//        }
+
+        // If we're retreating we cancel
+        if(this.centaurEntity.getIsRetreating()) {
+            return false;
+        }
+
         // No target means can't use
         if(this.centaurEntity.getTarget() == null) {
             return false;
@@ -144,6 +156,15 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
             }
         }
 
+        // If we don't have a weapon, and it's not a skeleton, don't attack
+        ItemStack itemHeld = this.centaurEntity.getHeldItem();
+        if(!ModMethods.isWeapon(itemHeld) && !(this.centaurEntity.getTarget() instanceof Skeleton)) {
+            return false;
+        }
+        // If we don't have a bow, and it is a skeleton, don't attack
+        else if(!ModMethods.isBowWeapon(itemHeld) && this.centaurEntity.getTarget() instanceof Skeleton) {
+            return false;
+        }
 
         boolean result = super.canUse();
 
@@ -161,6 +182,10 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         }
 
         if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
+            return false;
+        }
+
+        if(this.centaurEntity.getIsRetreating()) {
             return false;
         }
 
