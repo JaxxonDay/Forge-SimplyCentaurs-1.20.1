@@ -16,7 +16,7 @@ public class CentaurNearestAttackableTargetGoal extends NearestAttackableTargetG
     @Override
     public boolean canUse() {
         ItemStack itemHeld = this.centaurEntity.getHeldItem();
-        if(!ModMethods.isWeapon(itemHeld) && !ModMethods.isBowWeapon(itemHeld)) {
+        if(!ModMethods.canCauseDamage(this.centaurEntity.getInventory()) && !ModMethods.isBowWeapon(itemHeld)) {
             return false;
         }
         return super.canUse();

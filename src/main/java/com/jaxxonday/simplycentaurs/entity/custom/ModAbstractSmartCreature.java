@@ -118,6 +118,10 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
         this.itemHandler = net.minecraftforge.common.util.LazyOptional.of(() -> new net.minecraftforge.items.wrapper.InvWrapper(this.inventory));
     }
 
+    public SimpleContainer getInventory() {
+        return this.inventory;
+    }
+
     @Override
     public void onAddedToWorld() {
         super.onAddedToWorld();
@@ -186,12 +190,12 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
             return;
         }
 
-        System.out.println("Attempted to Eat!!!");
+        //System.out.println("Attempted to Eat!!!");
 
         int index = ModMethods.getFoodInInventoryIndex(this.inventory);
         if(index > -1 && this.getHealth() < this.getMaxHealth()) {
             ItemStack itemStack = this.inventory.getItem(index);
-            System.out.println("Found food!");
+            //System.out.println("Found food!");
             float saturationValue = ModMethods.getSaturationValue(itemStack) * 10f;
             float healAmount = 0.0f;
             if(saturationValue >= 2.0f) {

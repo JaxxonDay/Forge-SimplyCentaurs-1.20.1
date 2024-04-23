@@ -25,14 +25,19 @@ public class CentaurHurtByTargetGoal extends HurtByTargetGoal {
 
         UUID friendUUID = this.centaurEntity.getFriendUUID();
         if(livingEntity.getUUID().equals(friendUUID)) {
+            System.out.println("Found friend, not attacking");
             return false;
         }
 
-        boolean result = super.canUse();
-        if(result && livingEntity.getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
-            this.centaurEntity.setForgivenEntityUUID(CentaurEntity.NO_TARGET_UUID);
-        }
+        //this.mob.setAggressive(true);
 
-        return result;
+//        if(livingEntity.getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
+//            System.out.println("Found previously pardoned entity, now attempting to remove pardon");
+//            this.centaurEntity.setForgivenEntityUUID(CentaurEntity.NO_TARGET_UUID);
+//        } else {
+//            System.out.println("Couldn't find previously pardoned entity");
+//        }
+
+        return super.canUse();
     }
 }

@@ -1,9 +1,6 @@
 package com.jaxxonday.simplycentaurs.entity.custom;
 
-import com.jaxxonday.simplycentaurs.entity.ai.CentaurAttackGoal;
-import com.jaxxonday.simplycentaurs.entity.ai.CentaurHurtByTargetGoal;
-import com.jaxxonday.simplycentaurs.entity.ai.CentaurNearestAttackableTargetGoal;
-import com.jaxxonday.simplycentaurs.entity.ai.CentaurRetreatGoal;
+import com.jaxxonday.simplycentaurs.entity.ai.*;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.core.BlockPos;
@@ -81,6 +78,9 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private static final EntityDataAccessor<Boolean> DATA_IS_ATTACKING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_IS_RETREATING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
 
+    private static final EntityDataAccessor<String> DATA_FORGIVEN_UUID = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.STRING);
+
+
     public static final UUID NO_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
     private static final UUID ARMOR_UUID = UUID.randomUUID();
@@ -134,11 +134,11 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
     public UUID getForgivenEntityUUID() {
-        return this.forgivenEntityUUID;
+        return UUID.fromString(this.entityData.get(DATA_FORGIVEN_UUID));
     }
 
     public void setForgivenEntityUUID(UUID pUuid) {
-        this.forgivenEntityUUID = pUuid;
+        this.entityData.set(DATA_FORGIVEN_UUID, pUuid.toString());
     }
 
 
@@ -209,22 +209,25 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.entityData.define(DATA_IS_AIMING, false);
         this.entityData.define(DATA_IS_ATTACKING, false);
         this.entityData.define(DATA_IS_RETREATING, false);
+        this.entityData.define(DATA_FORGIVEN_UUID, CentaurEntity.NO_TARGET_UUID.toString());
     }
 
     @Override
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(5, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
-        this.goalSelector.addGoal(6, new WaterAvoidingRandomStrollGoal(this, 1.1D));
-        this.goalSelector.addGoal(7, new LookAtPlayerGoal(this, Player.class, 10f));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        this.goalSelector.addGoal(6, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
+        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.1D));
+        this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 10f));
+        this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
 
-        this.goalSelector.addGoal(1, new CentaurRetreatGoal(this, 1.5d));
-        this.goalSelector.addGoal(2, new CentaurAttackGoal(this, 1.5d, true, 6, 6, 700));
-        this.goalSelector.addGoal(3, new CentaurHurtByTargetGoal(this));
+        this.goalSelector.addGoal(2, new CentaurRetreatFromHurtByGoal(this, 1.5d));
+
+        this.goalSelector.addGoal(3, new CentaurRetreatGoal(this, 1.5d));
+        this.goalSelector.addGoal(4, new CentaurAttackGoal(this, 1.5d, true, 6, 6, 700));
+        this.goalSelector.addGoal(1, new CentaurHurtByTargetGoal(this));
         for (Class<? extends LivingEntity> targetClass : HOSTILE_TOWARDS) {
-            this.targetSelector.addGoal(4, new CentaurNearestAttackableTargetGoal(this, targetClass, true));
+            this.targetSelector.addGoal(5, new CentaurNearestAttackableTargetGoal(this, targetClass, true));
         }
     }
 
@@ -325,19 +328,26 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     public void updateAttackAttribute() {
         ItemStack heldItem = this.inventory.getItem(InventorySlot.HAND.ordinal()); // Check the designated slot for the item
-
+        if(!ModMethods.canCauseDamage(this.inventory)) {
+            removeAttackAttribute();
+            return;
+        }
         double additionalDamage = getAdditionalDamage(heldItem);
-        if (additionalDamage != 0) {
+        if (additionalDamage != 0.0d) {
             AttributeModifier modifier = new AttributeModifier(ATTACK_DAMAGE_MODIFIER_UUID, "Weapon modifier", additionalDamage, AttributeModifier.Operation.ADDITION);
             if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) == null) {
                 this.getAttribute(Attributes.ATTACK_DAMAGE).addTransientModifier(modifier);
                 System.out.println("Added Attack Damage modifier of amount " + additionalDamage);
             }
         } else {
-            if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) != null) {
-                this.getAttribute(Attributes.ATTACK_DAMAGE).removeModifier(ATTACK_DAMAGE_MODIFIER_UUID);
-                System.out.println("Removed Attack Damage modifier");
-            }
+            removeAttackAttribute();
+        }
+    }
+
+    private void removeAttackAttribute() {
+        if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) != null) {
+            this.getAttribute(Attributes.ATTACK_DAMAGE).removeModifier(ATTACK_DAMAGE_MODIFIER_UUID);
+            System.out.println("Removed Attack Damage modifier");
         }
     }
 
@@ -711,6 +721,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         if(!existingItem.isEmpty()) {
             this.inventory.setItem(InventorySlot.HAND.ordinal(), ItemStack.EMPTY);
         }
+
+        updateAttackAttribute();
     }
 
     public boolean hasItemInHand() {

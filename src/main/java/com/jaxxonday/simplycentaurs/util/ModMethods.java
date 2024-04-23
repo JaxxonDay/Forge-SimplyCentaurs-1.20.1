@@ -1,8 +1,15 @@
 package com.jaxxonday.simplycentaurs.util;
 
+import com.google.common.collect.Multimap;
+import com.jaxxonday.simplycentaurs.entity.custom.CentaurEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.food.FoodProperties;
 import net.minecraft.world.item.*;
 import net.minecraft.world.phys.Vec3;
@@ -115,6 +122,22 @@ public class ModMethods {
         }
 
         return getEmptyInventoryIndex(inventory);
+    }
+
+
+    public static BlockPos getEntityBlockPos(LivingEntity entity) {
+        return new BlockPos(entity.getBlockX(), entity.getBlockY(), entity.getBlockZ());
+    }
+
+    public static boolean canCauseDamage(Container inventory) {
+        ItemStack itemInMainHand = inventory.getItem(CentaurEntity.InventorySlot.HAND.ordinal());
+        if(itemInMainHand.isEmpty()) {
+            return false;
+        }
+
+        Multimap<Attribute, AttributeModifier> modifiers = itemInMainHand.getAttributeModifiers(EquipmentSlot.MAINHAND);
+
+        return modifiers.containsKey(Attributes.ATTACK_DAMAGE);
     }
 
 }

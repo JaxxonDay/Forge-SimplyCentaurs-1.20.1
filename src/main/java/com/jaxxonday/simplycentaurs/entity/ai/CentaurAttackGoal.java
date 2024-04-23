@@ -80,6 +80,9 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         this.ticksUntilNextAttack = this.adjustedTickDelay(attackDelay * 2);
     }
 
+    protected void resetAggroCooldown() {
+        this.aggroTimeLeft = this.aggroTime;
+    }
     protected boolean isTimeToAttack() {
         return this.ticksUntilNextAttack <= 0;
     }
@@ -117,9 +120,14 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         this.aggroTimeLeft = Math.max(this.aggroTimeLeft - 1, 0);
 
         if(this.aggroTimeLeft <= 0 && this.centaurEntity.getTarget() != null) {
-            System.out.println("Attempted to disable target");
             if(!CentaurEntity.HOSTILE_TOWARDS.contains(this.centaurEntity.getTarget().getClass())) {
-                this.centaurEntity.setForgivenEntityUUID(this.centaurEntity.getTarget().getUUID());
+                //this.centaurEntity.setForgivenEntityUUID(this.centaurEntity.getTarget().getUUID());
+                System.out.println("Attempted to disable target");
+                this.centaurEntity.setTarget((LivingEntity) null);
+                this.centaurEntity.setLastHurtByMob(((LivingEntity) null));
+                this.centaurEntity.setAggressive(false);
+                resetAggroCooldown();
+                this.stop();
             }
 
         }
@@ -138,14 +146,21 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         }
 
         // No target means can't use
+//        if(this.centaurEntity.getTarget() == null) {
+//            return false;
+//        }
         if(this.centaurEntity.getTarget() == null) {
             return false;
         }
 
         //Forgiven entity not attacked again
-        if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
-            return false;
-        }
+//        if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID() ||
+//            this.centaurEntity.getLastHurtByMob().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
+//            System.out.println("Entity forgiven, won't attack");
+//            return false;
+//        } else {
+//            System.out.println("Entity forgiven UUID is currently: " + this.centaurEntity.getForgivenEntityUUID());
+//        }
 
         if(!this.centaurEntity.level().isClientSide()) {
             if(this.centaurEntity.getAvoidTime() > 0) {
@@ -169,7 +184,7 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         boolean result = super.canUse();
 
         if(result) {
-            this.aggroTimeLeft = this.aggroTime;
+            resetAggroCooldown();
         }
 
         return result;
@@ -181,9 +196,9 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
             return false;
         }
 
-        if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
-            return false;
-        }
+//        if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
+//            return false;
+//        }
 
         if(this.centaurEntity.getIsRetreating()) {
             return false;

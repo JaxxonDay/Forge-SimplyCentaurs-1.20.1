@@ -11,9 +11,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
-import java.util.UUID;
 
-public class CentaurRetreatGoal extends Goal {
+public class CentaurRetreatFromHurtByGoal extends Goal {
 
     private final CentaurEntity centaurEntity;
 
@@ -24,12 +23,10 @@ public class CentaurRetreatGoal extends Goal {
 
     private int effectCounter = 0;
 
-
-    public CentaurRetreatGoal(CentaurEntity pCentaurEntity, double pSpeedModifier) {
-        this.centaurEntity = pCentaurEntity;
+    public CentaurRetreatFromHurtByGoal(CentaurEntity centaurEntity, double pSpeedModifier) {
+        this.centaurEntity = centaurEntity;
         this.speedModifier = pSpeedModifier;
     }
-
 
     @Override
     public void tick() {
@@ -72,9 +69,8 @@ public class CentaurRetreatGoal extends Goal {
         return false;
     }
 
-
     private boolean setAvoidanceTarget() {
-        LivingEntity entityToAvoid = findHostileEntityNearby(this.centaurEntity.level(), ModMethods.getEntityBlockPos(this.centaurEntity), 12d);
+        LivingEntity entityToAvoid = findAttackedByEntityNearby(this.centaurEntity.level(), ModMethods.getEntityBlockPos(this.centaurEntity), 12d);
         if(entityToAvoid == null) {
             return false;
         }
@@ -88,18 +84,15 @@ public class CentaurRetreatGoal extends Goal {
         return true;
     }
 
-    @Override
-    public boolean requiresUpdateEveryTick() {
-        return true;
-    }
-
-    public LivingEntity findHostileEntityNearby(Level world, BlockPos center, double radius) {
+    public static LivingEntity findAttackedByEntityNearby(Level world, BlockPos center, double radius) {
         // Create a bounding box around the center with the specified radius
         AABB area = new AABB(center).inflate(radius);
 
-        // Get all entities within the bounding box that match the HOSTILE_TOWARDS list
-        List<LivingEntity> nearbyEntities = world.getEntitiesOfClass(LivingEntity.class, area,
-                e -> CentaurEntity.HOSTILE_TOWARDS.contains(e.getClass()));
+        // Get all entities within the bounding box
+        List<LivingEntity> nearbyEntities = world.getEntitiesOfClass(LivingEntity.class, area, e -> {
+            // Check if the entity has a 'lastHurtByMob' and if that mob is in the HOSTILE_TOWARDS list
+            return e.getLastHurtByMob() != null;
+        });
 
         // Return the first matched entity, if any
         return nearbyEntities.isEmpty() ? null : nearbyEntities.get(0);
