@@ -78,7 +78,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private static final EntityDataAccessor<Boolean> DATA_IS_ATTACKING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_IS_RETREATING = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.BOOLEAN);
 
-    private static final EntityDataAccessor<String> DATA_FORGIVEN_UUID = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.STRING);
+    private static final EntityDataAccessor<String> DATA_ATTACK_TARGET_UUID = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.STRING);
 
 
     public static final UUID NO_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
@@ -133,12 +133,12 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.avoidEntityUUID = pUuid;
     }
 
-    public UUID getForgivenEntityUUID() {
-        return UUID.fromString(this.entityData.get(DATA_FORGIVEN_UUID));
+    public UUID getAttackTargetUUID() {
+        return UUID.fromString(this.entityData.get(DATA_ATTACK_TARGET_UUID));
     }
 
-    public void setForgivenEntityUUID(UUID pUuid) {
-        this.entityData.set(DATA_FORGIVEN_UUID, pUuid.toString());
+    public void setAttackTargetUUID(UUID pUuid) {
+        this.entityData.set(DATA_ATTACK_TARGET_UUID, pUuid.toString());
     }
 
 
@@ -209,7 +209,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.entityData.define(DATA_IS_AIMING, false);
         this.entityData.define(DATA_IS_ATTACKING, false);
         this.entityData.define(DATA_IS_RETREATING, false);
-        this.entityData.define(DATA_FORGIVEN_UUID, CentaurEntity.NO_TARGET_UUID.toString());
+        this.entityData.define(DATA_ATTACK_TARGET_UUID, CentaurEntity.NO_TARGET_UUID.toString());
     }
 
     @Override

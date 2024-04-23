@@ -29,15 +29,12 @@ public class CentaurHurtByTargetGoal extends HurtByTargetGoal {
             return false;
         }
 
-        //this.mob.setAggressive(true);
+        boolean result = super.canUse();
 
-//        if(livingEntity.getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
-//            System.out.println("Found previously pardoned entity, now attempting to remove pardon");
-//            this.centaurEntity.setForgivenEntityUUID(CentaurEntity.NO_TARGET_UUID);
-//        } else {
-//            System.out.println("Couldn't find previously pardoned entity");
-//        }
+        if(result) {
+            this.centaurEntity.setAttackTargetUUID(livingEntity.getUUID());
+        }
 
-        return super.canUse();
+        return result;
     }
 }

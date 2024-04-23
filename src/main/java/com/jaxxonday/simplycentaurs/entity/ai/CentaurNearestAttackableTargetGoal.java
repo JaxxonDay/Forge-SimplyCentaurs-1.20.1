@@ -19,6 +19,11 @@ public class CentaurNearestAttackableTargetGoal extends NearestAttackableTargetG
         if(!ModMethods.canCauseDamage(this.centaurEntity.getInventory()) && !ModMethods.isBowWeapon(itemHeld)) {
             return false;
         }
+
+        if(this.centaurEntity.getAttackTargetUUID() != CentaurEntity.NO_TARGET_UUID) {
+            return false;
+        }
+
         return super.canUse();
     }
 }

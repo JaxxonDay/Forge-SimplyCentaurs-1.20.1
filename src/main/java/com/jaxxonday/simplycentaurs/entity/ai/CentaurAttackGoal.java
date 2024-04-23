@@ -121,13 +121,9 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
 
         if(this.aggroTimeLeft <= 0 && this.centaurEntity.getTarget() != null) {
             if(!CentaurEntity.HOSTILE_TOWARDS.contains(this.centaurEntity.getTarget().getClass())) {
-                //this.centaurEntity.setForgivenEntityUUID(this.centaurEntity.getTarget().getUUID());
                 System.out.println("Attempted to disable target");
-                this.centaurEntity.setTarget((LivingEntity) null);
-                this.centaurEntity.setLastHurtByMob(((LivingEntity) null));
-                this.centaurEntity.setAggressive(false);
+                this.centaurEntity.setAttackTargetUUID(CentaurEntity.NO_TARGET_UUID);
                 resetAggroCooldown();
-                this.stop();
             }
 
         }
@@ -135,32 +131,22 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
 
     @Override
     public boolean canUse() {
-
-//        if(this.centaurEntity.level().isClientSide()) {
-//            return false;
-//        }
-
         // If we're retreating we cancel
         if(this.centaurEntity.getIsRetreating()) {
             return false;
         }
 
         // No target means can't use
-//        if(this.centaurEntity.getTarget() == null) {
-//            return false;
-//        }
         if(this.centaurEntity.getTarget() == null) {
             return false;
         }
 
-        //Forgiven entity not attacked again
-//        if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID() ||
-//            this.centaurEntity.getLastHurtByMob().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
-//            System.out.println("Entity forgiven, won't attack");
-//            return false;
-//        } else {
-//            System.out.println("Entity forgiven UUID is currently: " + this.centaurEntity.getForgivenEntityUUID());
-//        }
+        // If we're not targeting the right entity, can't use
+        if(this.centaurEntity.getTarget().getUUID() != this.centaurEntity.getAttackTargetUUID()) {
+            if(!CentaurEntity.HOSTILE_TOWARDS.contains(this.centaurEntity.getTarget().getClass())) {
+                return false;
+            }
+        }
 
         if(!this.centaurEntity.level().isClientSide()) {
             if(this.centaurEntity.getAvoidTime() > 0) {
@@ -176,6 +162,7 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         if(!ModMethods.isWeapon(itemHeld) && !(this.centaurEntity.getTarget() instanceof Skeleton)) {
             return false;
         }
+
         // If we don't have a bow, and it is a skeleton, don't attack
         else if(!ModMethods.isBowWeapon(itemHeld) && this.centaurEntity.getTarget() instanceof Skeleton) {
             return false;
@@ -196,9 +183,9 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
             return false;
         }
 
-//        if(this.centaurEntity.getTarget().getUUID() == this.centaurEntity.getForgivenEntityUUID()) {
-//            return false;
-//        }
+        if(this.centaurEntity.getTarget().getUUID() != this.centaurEntity.getAttackTargetUUID()) {
+            return false;
+        }
 
         if(this.centaurEntity.getIsRetreating()) {
             return false;
