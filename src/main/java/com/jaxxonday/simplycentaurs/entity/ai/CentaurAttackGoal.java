@@ -121,11 +121,9 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
 
         if(this.aggroTimeLeft <= 0 && this.centaurEntity.getTarget() != null) {
             if(!CentaurEntity.HOSTILE_TOWARDS.contains(this.centaurEntity.getTarget().getClass())) {
-                System.out.println("Attempted to disable target");
                 this.centaurEntity.setAttackTargetUUID(CentaurEntity.NO_TARGET_UUID);
                 resetAggroCooldown();
             }
-
         }
     }
 

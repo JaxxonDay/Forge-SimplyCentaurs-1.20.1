@@ -19,8 +19,13 @@ public class CentaurHurtByTargetGoal extends HurtByTargetGoal {
     @Override
     public boolean canUse() {
         LivingEntity livingEntity = this.mob.getLastHurtByMob();
-        if(livingEntity == null) {
+        LivingEntity targetEntity = this.mob.getTarget();
+        if(livingEntity == null && targetEntity == null) {
+            System.out.println("Entity found is null");
             return false;
+        } else if(targetEntity != null) {
+            livingEntity = targetEntity;
+            System.out.println("Entity found is not null");
         }
 
         UUID friendUUID = this.centaurEntity.getFriendUUID();

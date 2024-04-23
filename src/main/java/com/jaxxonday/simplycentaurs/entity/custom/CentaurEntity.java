@@ -91,7 +91,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private UUID friendUUID = NO_TARGET_UUID;
     private UUID avoidEntityUUID = NO_TARGET_UUID;
-    private UUID forgivenEntityUUID = NO_TARGET_UUID;
 
 
 
@@ -134,10 +133,16 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
     public UUID getAttackTargetUUID() {
+        if(this.level().isClientSide()) {
+            return NO_TARGET_UUID;
+        }
         return UUID.fromString(this.entityData.get(DATA_ATTACK_TARGET_UUID));
     }
 
     public void setAttackTargetUUID(UUID pUuid) {
+        if(this.level().isClientSide()) {
+            return;
+        }
         this.entityData.set(DATA_ATTACK_TARGET_UUID, pUuid.toString());
     }
 
@@ -225,7 +230,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
         this.goalSelector.addGoal(3, new CentaurRetreatGoal(this, 1.5d));
         this.goalSelector.addGoal(4, new CentaurAttackGoal(this, 1.5d, true, 6, 6, 700));
-        this.goalSelector.addGoal(1, new CentaurHurtByTargetGoal(this));
+        //this.goalSelector.addGoal(1, new CentaurHurtByTargetGoal(this));
         for (Class<? extends LivingEntity> targetClass : HOSTILE_TOWARDS) {
             this.targetSelector.addGoal(5, new CentaurNearestAttackableTargetGoal(this, targetClass, true));
         }
@@ -247,6 +252,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     @Override
     public void tick() {
         super.tick();
+
+        setHurtByTarget();
 
         if(this.level().isClientSide()) {
             setupAnimationStates();
@@ -781,6 +788,25 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private boolean isWoodSoundType(SoundType pSoundType) {
         return pSoundType == SoundType.WOOD || pSoundType == SoundType.NETHER_WOOD || pSoundType == SoundType.STEM || pSoundType == SoundType.CHERRY_WOOD || pSoundType == SoundType.BAMBOO_WOOD;
+    }
+
+
+    private void setHurtByTarget() {
+        if(this.level().isClientSide()) {
+            return;
+        }
+
+        if(this.getLastHurtByMob() == null) {
+            return;
+        }
+
+        LivingEntity lastHurtByMob = this.getLastHurtByMob();
+        if(this.getFriendUUID().toString().equals(lastHurtByMob.getUUID().toString())) {
+            return;
+        }
+
+        this.setTarget(this.getLastHurtByMob());
+        this.setAttackTargetUUID(lastHurtByMob.getUUID());
     }
 
 
