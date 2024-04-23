@@ -32,6 +32,7 @@ public class CentaurHurtByTargetGoal extends HurtByTargetGoal {
         boolean result = super.canUse();
 
         if(result) {
+            System.out.println("Setting attack goal to hurt by UUID");
             this.centaurEntity.setAttackTargetUUID(livingEntity.getUUID());
         }
 

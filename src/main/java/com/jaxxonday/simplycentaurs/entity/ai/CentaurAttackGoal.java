@@ -142,8 +142,11 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
         }
 
         // If we're not targeting the right entity, can't use
-        if(this.centaurEntity.getTarget().getUUID() != this.centaurEntity.getAttackTargetUUID()) {
+        if(!this.centaurEntity.getTarget().getUUID().toString().equals(this.centaurEntity.getAttackTargetUUID().toString())) {
             if(!CentaurEntity.HOSTILE_TOWARDS.contains(this.centaurEntity.getTarget().getClass())) {
+                System.out.println("UUIDs dont match");
+                System.out.println("UUID actually targeting is: " + this.centaurEntity.getAttackTargetUUID());
+                System.out.println("Versus the UUID stored in the target which is: " + this.centaurEntity.getTarget().getUUID());
                 return false;
             }
         }
@@ -183,7 +186,7 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
             return false;
         }
 
-        if(this.centaurEntity.getTarget().getUUID() != this.centaurEntity.getAttackTargetUUID()) {
+        if(!this.centaurEntity.getTarget().getUUID().toString().equals(this.centaurEntity.getAttackTargetUUID().toString())) {
             return false;
         }
 
