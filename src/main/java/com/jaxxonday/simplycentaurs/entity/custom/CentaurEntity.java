@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -20,7 +21,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.ai.navigation.GroundPathNavigation;
 import net.minecraft.world.entity.ai.navigation.PathNavigation;
 import net.minecraft.world.entity.monster.*;
@@ -29,7 +29,6 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
@@ -38,10 +37,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class CentaurEntity extends ModAbstractSmartCreature implements Saddleable {
     public enum Armor {
@@ -87,6 +83,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private static final UUID ATTACK_DAMAGE_MODIFIER_UUID = UUID.randomUUID();
 
+    public Map<Item, Integer> likedItems = new HashMap<>();
+
 
 
     private UUID friendUUID = NO_TARGET_UUID;
@@ -108,19 +106,51 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private int avoidTime = 0;
 
+    private int wildness = 500;
+
 
 
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setMaxUpStep(1.0f);
+        initializeLikedItems();
+        initializeTemptGoals();
     }
 
+
+    private void initializeLikedItems() {
+        likedItems.put(Items.APPLE, 10);
+        likedItems.put(Items.GOLDEN_APPLE, 30);
+        likedItems.put(Items.ENCHANTED_GOLDEN_APPLE, 350);
+        likedItems.put(Items.DIAMOND, 300);
+        likedItems.put(Items.EMERALD, 250);
+        likedItems.put(Items.AMETHYST_SHARD, 300);
+    }
+
+
+    private void initializeTemptGoals() {
+        this.goalSelector.addGoal(3, new TemptGoal(this, 0.9d, createTemptIngredient(), false));
+    }
+
+    private Ingredient createTemptIngredient() {
+        // Collects all items from the likedItems map into an Ingredient
+        return Ingredient.of(this.likedItems.keySet().stream()
+                .map(ItemStack::new)
+                .toArray(ItemStack[]::new));
+    }
+
+    public boolean isLikedItem(Item item) {
+        return likedItems.containsKey(item);
+    }
 
     public UUID getFriendUUID() {
         return this.friendUUID;
     }
 
     public void setFriendUUID(UUID pUuid) {
+        if(this.level().isClientSide()) {
+            return;
+        }
         this.friendUUID = pUuid;
     }
 
@@ -221,13 +251,12 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(6, new TemptGoal(this, 1.3D, Ingredient.of(Items.DIAMOND), false));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.1D));
         this.goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 10f));
         this.goalSelector.addGoal(9, new RandomLookAroundGoal(this));
 
         this.goalSelector.addGoal(2, new CentaurRetreatFromHurtByGoal(this, 1.5d));
-
+        this.goalSelector.addGoal(3, new CentaurAvoidAngryCauseGoal(this, 1.5d));
         this.goalSelector.addGoal(3, new CentaurRetreatGoal(this, 1.5d));
         this.goalSelector.addGoal(4, new CentaurAttackGoal(this, 1.5d, true, 6, 6, 700));
         //this.goalSelector.addGoal(1, new CentaurHurtByTargetGoal(this));
@@ -317,14 +346,17 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         ItemStack itemStack = pPlayer.getItemInHand(pHand);
 
         if(handleSaddlePlacement(pPlayer, pHand, itemStack)) {
+            this.getNavigation().stop();
             return InteractionResult.SUCCESS;
         }
 
         if(handleArmorPlacement(pPlayer, pHand, itemStack)) {
+            this.getNavigation().stop();
             return InteractionResult.SUCCESS;
         }
 
         if(handleItemPlacement(pPlayer, pHand, itemStack)) {
+            this.getNavigation().stop();
             return InteractionResult.SUCCESS;
         }
 
@@ -373,9 +405,17 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
 
     private boolean handleItemPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(!(pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) && !itemStack.isEmpty()) {
+            if(!itemStack.isEdible() && !isLikedItem(itemStack.getItem())) {
+                return true;
+            }
+        }
+
+
         if(itemStack.isEmpty() && pPlayer.isCrouching() && hasItemInHand()) {
             dropItem(getHeldItem().copy());
             unequipItem(null);
+
             return true;
         } else if(!itemStack.isEmpty() && !hasItemInHand()) {
             equipItem(pPlayer, pHand, itemStack, null);
@@ -398,6 +438,14 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
 
     private boolean handleSaddlePlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(!(pPlayer.getUUID().toString().equals(this.getFriendUUID().toString()))) {
+            this.getLookControl().setLookAt(pPlayer);
+            //ServerPlayer angryCause = this.getAngryCause();
+            this.setAngry(pPlayer);
+
+            return true;
+        }
+
         if(itemStack.isEmpty() && pPlayer.isCrouching() && isSaddled()) {
             unequipSaddle();
             dropItem(new ItemStack(Items.SADDLE));
@@ -414,6 +462,10 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
     private boolean handleArmorPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(!pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) {
+            return true;
+        }
+
         if(itemStack.isEmpty() && pPlayer.isCrouching() && isArmored()) {
             Armor equippedArmor = getEquippedArmor();
             if(equippedArmor == Armor.LEATHER) {
@@ -805,8 +857,12 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             return;
         }
 
-        this.setTarget(this.getLastHurtByMob());
-        this.setAttackTargetUUID(lastHurtByMob.getUUID());
+        setAggroTowards(this.getLastHurtByMob());
+    }
+
+    private void setAggroTowards(LivingEntity livingEntity) {
+        this.setTarget(livingEntity);
+        this.setAttackTargetUUID(livingEntity.getUUID());
     }
 
 

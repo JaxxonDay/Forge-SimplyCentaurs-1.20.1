@@ -97,4 +97,10 @@ public class CentaurRetreatFromHurtByGoal extends Goal {
         // Return the first matched entity, if any
         return nearbyEntities.isEmpty() ? null : nearbyEntities.get(0);
     }
+
+
+    @Override
+    public boolean requiresUpdateEveryTick() {
+        return true;
+    }
 }

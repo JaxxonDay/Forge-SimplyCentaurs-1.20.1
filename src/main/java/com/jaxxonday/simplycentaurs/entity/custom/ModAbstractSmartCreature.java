@@ -29,6 +29,8 @@ import java.util.UUID;
 
 public abstract class ModAbstractSmartCreature extends PathfinderMob implements ContainerListener {
     private static final EntityDataAccessor<Integer> DATA_GENDER = SynchedEntityData.defineId(ModAbstractSmartCreature.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> DATA_IS_ANGRY = SynchedEntityData.defineId(ModAbstractSmartCreature.class, EntityDataSerializers.BOOLEAN);
+
     private int variant = 0;
 
     protected SimpleContainer inventory;
@@ -37,10 +39,10 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
     protected boolean loadedSaveData = false;
     protected boolean hasBeenAddedBefore = false;
 
-    private final int LOVE_TIME = 700;
-    private final int HAPPY_TIME = 700;
-    private final int ANGRY_TIME = 700;
-    private final int NERVOUS_TIME = 700;
+    private final int LOVE_TIME = 200;
+    private final int HAPPY_TIME = 200;
+    private final int ANGRY_TIME = 200;
+    private final int NERVOUS_TIME = 200;
 
     private int inLove;
     private int inHappy;
@@ -66,6 +68,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_GENDER, 0);
+        this.entityData.define(DATA_IS_ANGRY, false);
     }
 
     @Override
@@ -262,6 +265,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
         this.inAngry = ANGRY_TIME;
         if (pPlayer != null) {
             this.angryCause = pPlayer.getUUID();
+            this.entityData.set(DATA_IS_ANGRY, true);
         }
 
         this.level().broadcastEntityEvent(this, (byte)13);
@@ -326,7 +330,8 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
     }
 
     public boolean isAngry() {
-        return this.inAngry > 0;
+        return this.entityData.get(DATA_IS_ANGRY);
+        //return this.inAngry > 0;
     }
 
     public boolean isNervous() {
@@ -342,7 +347,10 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
     }
 
     public void resetAngry() {
-        this.inAngry = 0;
+        if(!this.level().isClientSide()) {
+            this.entityData.set(DATA_IS_ANGRY, false);
+            this.inAngry = 0;
+        }
     }
 
     public void resetNervous() {
@@ -389,6 +397,8 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
             if (this.inAngry % 10 == 0) {
                 doSingleParticleEffect(ParticleTypes.ANGRY_VILLAGER, new Vec3(0.0d, 0.5d, 0.0d));
             }
+        } else {
+            this.resetAngry();
         }
     }
 
