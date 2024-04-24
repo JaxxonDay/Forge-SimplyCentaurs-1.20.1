@@ -33,13 +33,8 @@ public class CentaurAvoidAngryCauseGoal extends Goal {
         }
         ServerPlayer testAngryCause = this.centaurEntity.getAngryCause();
         if(testAngryCause == null || this.centaurEntity.canGetAngry()) {
-            //this.angryCause = null;
-            if(!this.centaurEntity.isAngry()) {
-                System.out.println("Not angry, so return false");
-            }
             return false;
         }
-        System.out.println("Angry Cause is not null");
         this.angryCause = testAngryCause;
         return setAvoidanceTarget();
     }

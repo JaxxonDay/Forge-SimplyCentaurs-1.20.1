@@ -125,6 +125,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         likedItems.put(Items.DIAMOND, 300);
         likedItems.put(Items.EMERALD, 250);
         likedItems.put(Items.AMETHYST_SHARD, 300);
+        likedItems.put(Items.DIAMOND_SWORD, 150);
     }
 
 
@@ -411,22 +412,30 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             }
         }
 
+        boolean likedItem = false;
+        if(!itemStack.isEmpty()) {
+            likedItem = isLikedItem(itemStack.getItem());
+        }
+
 
         if(itemStack.isEmpty() && pPlayer.isCrouching() && hasItemInHand()) {
+            this.setAngryAboutLosingItem(pPlayer, getHeldItem().getItem(), getHeldItem().getCount());
             dropItem(getHeldItem().copy());
             unequipItem(null);
-
             return true;
         } else if(!itemStack.isEmpty() && !hasItemInHand()) {
+            this.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
             equipItem(pPlayer, pHand, itemStack, null);
             return true;
         } else if(!itemStack.isEmpty() && hasItemInHand()) {
             if(!ModMethods.isFoodItem(itemStack)) {
+                this.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
                 dropItem(getHeldItem().copy());
                 unequipItem(null);
                 equipItem(pPlayer, pHand, itemStack, null);
             } else {
                 System.out.println("Tried placing item in inventory");
+                this.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
                 placeItemInInventory(pPlayer, pHand, itemStack, null);
             }
 
@@ -438,10 +447,25 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
 
     private boolean handleSaddlePlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
-        if(!(pPlayer.getUUID().toString().equals(this.getFriendUUID().toString()))) {
+        if(itemStack.getItem() != Items.SADDLE && !itemStack.isEmpty()) {
+            return false;
+        }
+
+        if(!(pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) && !itemStack.isEmpty()) {
             this.getLookControl().setLookAt(pPlayer);
-            //ServerPlayer angryCause = this.getAngryCause();
-            this.setAngry(pPlayer);
+            ServerPlayer nervousCause = this.getNervousCause();
+
+            if(nervousCause != null && this.isNervous()) {
+                if(this.random.nextBoolean()) {
+                    this.setAngry(nervousCause);
+                } else {
+                    this.setAggroTowards(nervousCause);
+                }
+
+            } else {
+                this.setNervous(pPlayer);
+            }
+
 
             return true;
         }
@@ -462,6 +486,13 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
     private boolean handleArmorPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
+        if(itemStack.getItem() != ModItems.LEATHER_CENTAUR_ARMOR.get() &&
+                itemStack.getItem() != ModItems.IRON_CENTAUR_ARMOR.get() &&
+                itemStack.getItem() != ModItems.GOLDEN_CENTAUR_ARMOR.get() &&
+                itemStack.getItem() != ModItems.DIAMOND_CENTAUR_ARMOR.get()) {
+            return false;
+        }
+
         if(!pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) {
             return true;
         }
@@ -512,6 +543,29 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         }
 
         return false;
+    }
+
+
+    private void adjustWildness(Player player, int amount) {
+        if(this.getFriendUUID().toString().equals(player.getUUID().toString())) {
+            System.out.println("Won't adjust wildness, since we're friends!");
+            if(amount > 0) {
+                this.setAngry(player);
+            } else if(amount < 0) {
+                this.setInLove(player);
+            }
+            return;
+        }
+        this.wildness += amount;
+
+        if(this.wildness <= 0) {
+            this.wildness = 0;
+            if(this.getFriendUUID() == CentaurEntity.NO_TARGET_UUID) {
+                setFriendUUID(player.getUUID());
+                this.setInLove(player);
+            }
+        }
+        System.out.println("WILDNESS is now " + this.wildness);
     }
 
 
@@ -863,6 +917,33 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private void setAggroTowards(LivingEntity livingEntity) {
         this.setTarget(livingEntity);
         this.setAttackTargetUUID(livingEntity.getUUID());
+    }
+
+
+    private void setHappyAboutReceivingItem(Player player, Item item, int multiplier) {
+        int value = getLikedItemValue(item);
+        if(value > 0) {
+            this.setHappy(player);
+            this.adjustWildness(player, -value * multiplier);
+        }
+    }
+
+    private int getLikedItemValue(Item item) {
+        if(!isLikedItem(item)) {
+            System.out.println("Item " + item + " wasn't liked");
+            return 0;
+        }
+        System.out.println("Item was liked, value was: " + likedItems.get(item));
+        return likedItems.get(item);
+    }
+
+
+    private void setAngryAboutLosingItem(Player player, Item item, int multiplier) {
+        int value = getLikedItemValue(item);
+        if(value > 0) {
+            this.setAngry(player);
+            this.adjustWildness(player, value * multiplier);
+        }
     }
 
 

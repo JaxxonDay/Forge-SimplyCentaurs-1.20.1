@@ -40,7 +40,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
     protected boolean hasBeenAddedBefore = false;
 
     private final int LOVE_TIME = 200;
-    private final int HAPPY_TIME = 200;
+    private final int HAPPY_TIME = 40;
     private final int ANGRY_TIME = 200;
     private final int NERVOUS_TIME = 200;
 
@@ -384,7 +384,7 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
 
     protected void doHappyParticlesAndTimer() {
         if (this.inHappy > 0) {
-            --this.inLove;
+            --this.inHappy;
             if (this.inHappy % 10 == 0) {
                 doSingleParticleEffect(ParticleTypes.HAPPY_VILLAGER, new Vec3(0.0d, 0.5d, 0.0d));
             }
