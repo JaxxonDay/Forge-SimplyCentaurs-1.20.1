@@ -487,12 +487,15 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             gapFound = true;
         }
 
-        if(pPlayer.isSprinting()) {
-            pPlayer.setSprinting(false);
-            this.setSprinting(true);
-        } else if(pPlayer.zza < 0.0f && this.isSprinting()) {
-            this.setSprinting(false);
+        if(!this.level().isClientSide()) {
+            if(pPlayer.isSprinting()) {
+                pPlayer.setSprinting(false);
+                this.setSprinting(true);
+            } else if(pPlayer.zza < 0.0f && this.isSprinting()) {
+                this.setSprinting(false);
+            }
         }
+
 
         // Defining side movement
         double sideInput = pPlayer.xxa * 0.2d;
@@ -507,7 +510,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
                 // in reverse
                 forwardInput = Math.max(pPlayer.zza, 0.0d);
             }
-            sideInput = pPlayer.xxa * 0.7d;;
+            sideInput = pPlayer.xxa * 0.5d;;
         }
 
         // Jumping
