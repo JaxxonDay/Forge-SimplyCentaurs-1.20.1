@@ -11,7 +11,10 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
+import java.util.UUID;
+
 public class CentaurInteractionHandler {
+    private static final UUID ARMOR_UUID = UUID.randomUUID();
     private final CentaurEntity centaurEntity;
     private final CentaurMoodHandler moodHandler;
 

@@ -4,6 +4,7 @@ import com.jaxxonday.simplycentaurs.entity.ai.*;
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurAdditionalAttributeHandler;
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurInteractionHandler;
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurMoodHandler;
+import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurSoundHandler;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.core.BlockPos;
@@ -79,12 +80,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private static final EntityDataAccessor<String> DATA_ATTACK_TARGET_UUID = SynchedEntityData.defineId(CentaurEntity.class, EntityDataSerializers.STRING);
 
-
     public static final UUID NO_TARGET_UUID = UUID.fromString("00000000-0000-0000-0000-000000000000");
 
-    private static final UUID ARMOR_UUID = UUID.randomUUID();
-
-    private static final UUID ATTACK_DAMAGE_MODIFIER_UUID = UUID.randomUUID();
 
     public Map<Item, Integer> likedItems = new HashMap<>();
 
@@ -95,8 +92,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private final CentaurInteractionHandler interactionHandler;
     private final CentaurAdditionalAttributeHandler attributeHandler;
-
     private final CentaurMoodHandler moodHandler;
+    private final CentaurSoundHandler soundHandler;
 
 
 
@@ -110,7 +107,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     public double heightBoost = 0.0d;
 
     protected int gallopSoundCounter;
-    protected boolean canGallop = true;
 
     private int avoidTime = 0;
 
@@ -123,6 +119,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.attributeHandler = new CentaurAdditionalAttributeHandler(this);
         this.moodHandler = new CentaurMoodHandler(this);
         this.interactionHandler = new CentaurInteractionHandler(this, this.moodHandler);
+        this.soundHandler = new CentaurSoundHandler(this);
         initializeLikedItems();
         initializeTemptGoals();
     }
@@ -678,51 +675,16 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         return existingItem;
     }
 
+    public boolean isCanGallop() {
+        return true;
+    }
+
 
     @Override
     protected void playStepSound(BlockPos pPos, BlockState pBlock) {
-        if(random.nextInt(10) == 0) {
+        if(!this.soundHandler.handledStepSound(pPos, pBlock)) {
             super.playStepSound(pPos, pBlock);
-            return;
         }
-
-        if (!pBlock.liquid()) {
-            BlockState blockstate = this.level().getBlockState(pPos.above());
-            SoundType soundtype = pBlock.getSoundType(level(), pPos, this);
-            if (blockstate.is(Blocks.SNOW)) {
-                soundtype = blockstate.getSoundType(level(), pPos, this);
-            }
-
-            if (this.isVehicle() && this.canGallop) {
-                ++this.gallopSoundCounter;
-                if(this.gallopSoundCounter > 5 && this.gallopSoundCounter % 3 == 0 && this.random.nextBoolean()) {
-                    this.playGallopSound(soundtype);
-                }
-                int type = this.random.nextInt(2);
-                if(type == 0) {
-                    this.playSound(SoundEvents.HORSE_STEP, soundtype.getVolume() * 0.05F, soundtype.getPitch());
-                } else if(type == 1) {
-                    this.playSound(SoundEvents.HORSE_STEP_WOOD, soundtype.getVolume() * 0.05F, soundtype.getPitch());
-                }
-            } else if (this.isWoodSoundType(soundtype)) {
-                this.gallopSoundCounter = 0;
-                this.playSound(SoundEvents.HORSE_STEP_WOOD, soundtype.getVolume() * 0.05F, soundtype.getPitch());
-            } else {
-                this.gallopSoundCounter = 0;
-                this.playSound(SoundEvents.HORSE_STEP, soundtype.getVolume() * 0.05F, soundtype.getPitch());
-            }
-
-        }
-    }
-
-
-    protected void playGallopSound(SoundType pSoundType) {
-        this.playSound(SoundEvents.HORSE_GALLOP, pSoundType.getVolume() * 0.05F, pSoundType.getPitch() + 0.2f);
-    }
-
-
-    private boolean isWoodSoundType(SoundType pSoundType) {
-        return pSoundType == SoundType.WOOD || pSoundType == SoundType.NETHER_WOOD || pSoundType == SoundType.STEM || pSoundType == SoundType.CHERRY_WOOD || pSoundType == SoundType.BAMBOO_WOOD;
     }
 
 
@@ -748,15 +710,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         this.setAttackTargetUUID(livingEntity.getUUID());
     }
 
-
-//    public void setHappyAboutReceivingItem(Player player, Item item, int multiplier) {
-//        int value = getLikedItemValue(item);
-//        if(value > 0) {
-//            this.setHappy(player);
-//            this.adjustWildness(player, -value * multiplier);
-//        }
-//    }
-
     public int getLikedItemValue(Item item) {
         if(!isLikedItem(item)) {
             System.out.println("Item " + item + " wasn't liked");
@@ -765,16 +718,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         System.out.println("Item was liked, value was: " + likedItems.get(item));
         return likedItems.get(item);
     }
-
-
-//    public void setAngryAboutLosingItem(Player player, Item item, int multiplier) {
-//        int value = getLikedItemValue(item);
-//        if(value > 0) {
-//            this.setAngry(player);
-//            this.adjustWildness(player, value * multiplier);
-//        }
-//    }
-
 
 
 
