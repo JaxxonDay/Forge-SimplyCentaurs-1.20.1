@@ -265,7 +265,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             }
             if(!this.persoM && this.isSprinting() && this.getRandom().nextInt(50) == 0) {
                 this.setSprinting(false);
-            } else if(this.persoM && this.getRandom().nextInt(32) == 0) {
+            } else if(this.persoM && this.getRandom().nextInt(128) == 0) {
                 this.moodHandler.setInLove(null);
             }
 
