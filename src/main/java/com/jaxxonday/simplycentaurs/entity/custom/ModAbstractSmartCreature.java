@@ -216,13 +216,13 @@ public abstract class ModAbstractSmartCreature extends PathfinderMob implements 
     }
 
 
-    protected void usePlayerItem(Player pPlayer, InteractionHand pHand, ItemStack pStack, boolean consumeInCreative) {
+    public void usePlayerItem(Player pPlayer, InteractionHand pHand, ItemStack pStack, boolean consumeInCreative) {
         if (!pPlayer.getAbilities().instabuild || consumeInCreative) {
             pStack.shrink(1);
         }
     }
 
-    protected void dropItem(ItemStack itemStack) {
+    public void dropItem(ItemStack itemStack) {
         this.spawnAtLocation(itemStack, 0.0f);
     }
 

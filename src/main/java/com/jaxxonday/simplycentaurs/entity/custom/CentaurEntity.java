@@ -1,6 +1,7 @@
 package com.jaxxonday.simplycentaurs.entity.custom;
 
 import com.jaxxonday.simplycentaurs.entity.ai.*;
+import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurInteractionHandler;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.core.BlockPos;
@@ -90,6 +91,8 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private UUID friendUUID = NO_TARGET_UUID;
     private UUID avoidEntityUUID = NO_TARGET_UUID;
 
+    private final CentaurInteractionHandler interactionHandler;
+
 
 
 
@@ -109,10 +112,10 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private int wildness = 500;
 
 
-
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.setMaxUpStep(1.0f);
+        this.setMaxUpStep(1.2f);
+        this.interactionHandler = new CentaurInteractionHandler(this);
         initializeLikedItems();
         initializeTemptGoals();
     }
@@ -346,17 +349,17 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
         ItemStack itemStack = pPlayer.getItemInHand(pHand);
 
-        if(handleSaddlePlacement(pPlayer, pHand, itemStack)) {
+        if(this.interactionHandler.handleSaddlePlacement(pPlayer, pHand, itemStack)) {
             this.getNavigation().stop();
             return InteractionResult.SUCCESS;
         }
 
-        if(handleArmorPlacement(pPlayer, pHand, itemStack)) {
+        if(this.interactionHandler.handleArmorPlacement(pPlayer, pHand, itemStack)) {
             this.getNavigation().stop();
             return InteractionResult.SUCCESS;
         }
 
-        if(handleItemPlacement(pPlayer, pHand, itemStack)) {
+        if(this.interactionHandler.handleItemPlacement(pPlayer, pHand, itemStack)) {
             this.getNavigation().stop();
             return InteractionResult.SUCCESS;
         }
@@ -402,147 +405,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             }
         }
         return 0;  // Return 0 if no valid modifiers are found or itemStack is null/empty
-    }
-
-
-    private boolean handleItemPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
-        if(!(pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) && !itemStack.isEmpty()) {
-            if(!itemStack.isEdible() && !isLikedItem(itemStack.getItem())) {
-                return true;
-            }
-        }
-
-        boolean likedItem = false;
-        if(!itemStack.isEmpty()) {
-            likedItem = isLikedItem(itemStack.getItem());
-        }
-
-
-        if(itemStack.isEmpty() && pPlayer.isCrouching() && hasItemInHand()) {
-            this.setAngryAboutLosingItem(pPlayer, getHeldItem().getItem(), getHeldItem().getCount());
-            dropItem(getHeldItem().copy());
-            unequipItem(null);
-            return true;
-        } else if(!itemStack.isEmpty() && !hasItemInHand()) {
-            this.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
-            equipItem(pPlayer, pHand, itemStack, null);
-            return true;
-        } else if(!itemStack.isEmpty() && hasItemInHand()) {
-            if(!ModMethods.isFoodItem(itemStack)) {
-                this.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
-                dropItem(getHeldItem().copy());
-                unequipItem(null);
-                equipItem(pPlayer, pHand, itemStack, null);
-            } else {
-                System.out.println("Tried placing item in inventory");
-                this.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
-                placeItemInInventory(pPlayer, pHand, itemStack, null);
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-
-    private boolean handleSaddlePlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
-        if(itemStack.getItem() != Items.SADDLE && !itemStack.isEmpty()) {
-            return false;
-        }
-
-        if(!(pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) && !itemStack.isEmpty()) {
-            this.getLookControl().setLookAt(pPlayer);
-            ServerPlayer nervousCause = this.getNervousCause();
-
-            if(nervousCause != null && this.isNervous()) {
-                if(this.random.nextBoolean()) {
-                    this.setAngry(nervousCause);
-                } else {
-                    this.setAggroTowards(nervousCause);
-                }
-
-            } else {
-                this.setNervous(pPlayer);
-            }
-
-
-            return true;
-        }
-
-        if(itemStack.isEmpty() && pPlayer.isCrouching() && isSaddled()) {
-            unequipSaddle();
-            dropItem(new ItemStack(Items.SADDLE));
-            return true;
-        } else if(itemStack.isEmpty() && !pPlayer.isCrouching() && isSaddled()) {
-            doPlayerRide(pPlayer);
-            return true;
-        } else if(itemStack.is(Items.SADDLE) && !isSaddled()) {
-            equipSaddle(SoundSource.BLOCKS);
-            usePlayerItem(pPlayer, pHand, itemStack, true);
-            return true;
-        }
-        return false;
-    }
-
-    private boolean handleArmorPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
-        if(itemStack.getItem() != ModItems.LEATHER_CENTAUR_ARMOR.get() &&
-                itemStack.getItem() != ModItems.IRON_CENTAUR_ARMOR.get() &&
-                itemStack.getItem() != ModItems.GOLDEN_CENTAUR_ARMOR.get() &&
-                itemStack.getItem() != ModItems.DIAMOND_CENTAUR_ARMOR.get()) {
-            return false;
-        }
-
-        if(!pPlayer.getUUID().toString().equals(this.getFriendUUID().toString())) {
-            return true;
-        }
-
-        if(itemStack.isEmpty() && pPlayer.isCrouching() && isArmored()) {
-            Armor equippedArmor = getEquippedArmor();
-            if(equippedArmor == Armor.LEATHER) {
-                this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 0.7f);
-                dropItem(new ItemStack(ModItems.LEATHER_CENTAUR_ARMOR.get()));
-            } else if(equippedArmor == Armor.IRON) {
-                this.playSound(SoundEvents.ARMOR_EQUIP_IRON, 0.5f, 0.7f);
-                dropItem(new ItemStack(ModItems.IRON_CENTAUR_ARMOR.get()));
-            } else if(equippedArmor == Armor.GOLDEN) {
-                this.playSound(SoundEvents.ARMOR_EQUIP_GOLD, 0.5f, 0.7f);
-                dropItem(new ItemStack(ModItems.GOLDEN_CENTAUR_ARMOR.get()));
-            } else if(equippedArmor == Armor.DIAMOND) {
-                this.playSound(SoundEvents.ARMOR_EQUIP_DIAMOND, 0.5f, 0.7f);
-                dropItem(new ItemStack(ModItems.DIAMOND_CENTAUR_ARMOR.get()));
-            }
-
-            setEquippedArmor(Armor.NONE);
-            return true;
-        }
-
-        if(!pPlayer.isCrouching() && !isArmored()) {
-            boolean equipped = false;
-            if(itemStack.is(ModItems.LEATHER_CENTAUR_ARMOR.get())) {
-                setEquippedArmor(Armor.LEATHER);
-                this.playSound(SoundEvents.ARMOR_EQUIP_LEATHER, 0.5f, 1f);
-                equipped = true;
-            } else if(itemStack.is(ModItems.IRON_CENTAUR_ARMOR.get())) {
-                setEquippedArmor(Armor.IRON);
-                this.playSound(SoundEvents.ARMOR_EQUIP_IRON, 0.5f, 1f);
-                equipped = true;
-            } else if(itemStack.is(ModItems.GOLDEN_CENTAUR_ARMOR.get())) {
-                setEquippedArmor(Armor.GOLDEN);
-                this.playSound(SoundEvents.ARMOR_EQUIP_GOLD, 0.5f, 1f);
-                equipped = true;
-            } else if(itemStack.is(ModItems.DIAMOND_CENTAUR_ARMOR.get())) {
-                setEquippedArmor(Armor.DIAMOND);
-                this.playSound(SoundEvents.ARMOR_EQUIP_DIAMOND, 0.5f, 1f);
-                equipped = true;
-            }
-            if(equipped) {
-                usePlayerItem(pPlayer, pHand, itemStack, true);
-                return true;
-            }
-        }
-
-        return false;
     }
 
 
@@ -607,7 +469,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-    protected void doPlayerRide(Player pPlayer) {
+    public void doPlayerRide(Player pPlayer) {
         if (!this.level().isClientSide) {
             pPlayer.setYRot(this.getYRot());
             pPlayer.setXRot(this.getXRot());
@@ -914,13 +776,13 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         setAggroTowards(this.getLastHurtByMob());
     }
 
-    private void setAggroTowards(LivingEntity livingEntity) {
+    public void setAggroTowards(LivingEntity livingEntity) {
         this.setTarget(livingEntity);
         this.setAttackTargetUUID(livingEntity.getUUID());
     }
 
 
-    private void setHappyAboutReceivingItem(Player player, Item item, int multiplier) {
+    public void setHappyAboutReceivingItem(Player player, Item item, int multiplier) {
         int value = getLikedItemValue(item);
         if(value > 0) {
             this.setHappy(player);
@@ -938,7 +800,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-    private void setAngryAboutLosingItem(Player player, Item item, int multiplier) {
+    public void setAngryAboutLosingItem(Player player, Item item, int multiplier) {
         int value = getLikedItemValue(item);
         if(value > 0) {
             this.setAngry(player);
