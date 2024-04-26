@@ -20,9 +20,9 @@ public class CentaurNearestAttackableTargetGoal extends NearestAttackableTargetG
             return false;
         }
 
-        if(this.centaurEntity.getAttackTargetUUID() != CentaurEntity.NO_TARGET_UUID) {
-            return false;
-        }
+//        if(this.centaurEntity.getAttackTargetUUID() != CentaurEntity.NO_TARGET_UUID) {
+//            return false;
+//        }
 
         return super.canUse();
     }

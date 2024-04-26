@@ -3,6 +3,7 @@ package com.jaxxonday.simplycentaurs.util;
 import com.google.common.collect.Multimap;
 import com.jaxxonday.simplycentaurs.entity.custom.CentaurEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -17,7 +18,7 @@ import net.minecraft.world.phys.Vec3;
 import static java.lang.Math.round;
 
 public class ModMethods {
-    public static boolean getGapBelow(Entity entity, float distanceScale) {
+    public static boolean getGapBelow(Entity entity, float distanceScale, int verticalDistance) {
         Vec3 position = new Vec3(entity.getX(), entity.getY(), entity.getZ());
         Vec3 lookAngle = entity.getLookAngle().multiply(distanceScale, distanceScale, distanceScale);
         double offsetY = 0.1D;
@@ -28,23 +29,56 @@ public class ModMethods {
 
         BlockPos collidePos = new BlockPos(posX, posY, posZ);
 
-        boolean belowIsAir = entity.level().getBlockState(collidePos.below()).isAir();
-        boolean below2IsAir = entity.level().getBlockState(collidePos.below(2)).isAir();
-        boolean below3IsAir = entity.level().getBlockState(collidePos.below(3)).isAir();
-        boolean below4IsAir = entity.level().getBlockState(collidePos.below(4)).isAir();
+        return areAllBlocksBelowAir(entity, collidePos, verticalDistance);
 
-        if(belowIsAir && below2IsAir && below3IsAir && below4IsAir) {
+//        boolean belowIsAir = entity.level().getBlockState(collidePos.below()).isAir();
+//        boolean below2IsAir = entity.level().getBlockState(collidePos.below(2)).isAir();
+//        boolean below3IsAir = entity.level().getBlockState(collidePos.below(3)).isAir();
+//        boolean below4IsAir = entity.level().getBlockState(collidePos.below(4)).isAir();
+//
+//        if(belowIsAir && below2IsAir && below3IsAir && below4IsAir) {
+//            return true;
+//        }
+//
+//        return false;
+    }
+
+
+
+    private static boolean areAllBlocksBelowAir(Entity entity, BlockPos collidePos, int verticalDistance) {
+        for (int i = 1; i <= verticalDistance; i++) {
+            if (!entity.level().getBlockState(collidePos.below(i)).isAir()) {
+                return false;  // Found a block that is not air
+            }
+        }
+        return true;  // All checked blocks are air
+    }
+
+    public static boolean getJumpableGapBelow(Entity entity) {
+        boolean oneBlockGap = getGapBelow(entity, 1.0f, 4);
+        boolean fourBlockGap = getGapBelow(entity, 4.0f, 4);
+
+        if(!oneBlockGap || !fourBlockGap) {
             return true;
         }
 
         return false;
     }
 
-    public static boolean getJumpableGapBelow(Entity entity) {
-        boolean oneBlockGap = getGapBelow(entity, 1.0f);
-        boolean fourBlockGap = getGapBelow(entity, 4.0f);
+    public static boolean getBlocksBlocking(Entity entity, float distanceCheck) {
+        Vec3 position = new Vec3(entity.getX(), entity.getY(), entity.getZ());
+        Vec3 lookAngle = entity.getLookAngle().multiply(distanceCheck, distanceCheck, distanceCheck);
+        double offsetY = 0.1D;
 
-        if(!oneBlockGap || !fourBlockGap) {
+        int posX = (int)round(lookAngle.x + position.x);
+        int posY = (int)round(position.y + offsetY);
+        int posZ = (int)round(lookAngle.z + position.z);
+
+        BlockPos collidePos = new BlockPos(posX, posY, posZ);
+        boolean blockOne = !entity.level().getBlockState(collidePos.above(1)).isAir();
+        boolean blockTwo = !entity.level().getBlockState(collidePos.above(2)).isAir();
+
+        if(blockOne && blockTwo) {
             return true;
         }
 
@@ -138,6 +172,18 @@ public class ModMethods {
         Multimap<Attribute, AttributeModifier> modifiers = itemInMainHand.getAttributeModifiers(EquipmentSlot.MAINHAND);
 
         return modifiers.containsKey(Attributes.ATTACK_DAMAGE);
+    }
+
+
+
+    public static void setRotLerp(LivingEntity entity, float pYRot, float pXRot, float delta) {
+        float yRot = entity.getYRot();
+        float xRot = entity.getXRot();
+
+        yRot = Mth.rotLerp(delta, yRot, pYRot);
+        xRot = Mth.rotLerp(delta, xRot, pXRot);
+        entity.setYRot(yRot % 360.0F);
+        entity.setXRot(xRot % 360.0F);
     }
 
 }

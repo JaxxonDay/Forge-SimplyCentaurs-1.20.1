@@ -5,13 +5,12 @@ import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurAdditionalAttri
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurInteractionHandler;
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurMoodHandler;
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurSoundHandler;
-import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -20,8 +19,10 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.Container;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
@@ -35,8 +36,6 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
 import org.jetbrains.annotations.Nullable;
@@ -85,10 +84,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     public Map<Item, Integer> likedItems = new HashMap<>();
 
-
-
     private UUID friendUUID = NO_TARGET_UUID;
-    private UUID avoidEntityUUID = NO_TARGET_UUID;
 
     private final CentaurInteractionHandler interactionHandler;
     private final CentaurAdditionalAttributeHandler attributeHandler;
@@ -104,13 +100,24 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     public final AnimationState attackAnimationState = new AnimationState();
     public int attackAnimationTimeout = 0;
 
+    public final AnimationState jumpAnimationState = new AnimationState();
+    public int jumpAnimationTimeout = 0;
+
+    private boolean activeJumpAnimation = false;
+
+
     public double heightBoost = 0.0d;
-
-    protected int gallopSoundCounter;
-
-    private int avoidTime = 0;
-
+    private float positionBoost = 0.7f;
     private int wildness = 500;
+    private int maxWildness = 500;
+    public long lastTimeRidden = -7700;
+
+    public int currentTimeRidden = 0;
+    public final int RIDDEN_ANGRY_INTERVAL = 7700;
+
+    public boolean persoM = false;
+    public boolean persoT = false;
+    public boolean persoS = false;
 
 
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
@@ -135,6 +142,10 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         likedItems.put(Items.DIAMOND_SWORD, 150);
     }
 
+    public boolean isLikedItem(Item item) {
+        return likedItems.containsKey(item);
+    }
+
 
     private void initializeTemptGoals() {
         this.goalSelector.addGoal(3, new TemptGoal(this, 0.9d, createTemptIngredient(), false));
@@ -145,102 +156,6 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         return Ingredient.of(this.likedItems.keySet().stream()
                 .map(ItemStack::new)
                 .toArray(ItemStack[]::new));
-    }
-
-    public boolean isLikedItem(Item item) {
-        return likedItems.containsKey(item);
-    }
-
-    public UUID getFriendUUID() {
-        return this.friendUUID;
-    }
-
-    public void setFriendUUID(UUID pUuid) {
-        if(this.level().isClientSide()) {
-            return;
-        }
-        this.friendUUID = pUuid;
-    }
-
-    public UUID getAvoidEntityUUID() {
-        return this.avoidEntityUUID;
-    }
-
-    public void setAvoidEntityUUID(UUID pUuid) {
-        this.avoidEntityUUID = pUuid;
-    }
-
-    public UUID getAttackTargetUUID() {
-        if(this.level().isClientSide()) {
-            return NO_TARGET_UUID;
-        }
-        return UUID.fromString(this.entityData.get(DATA_ATTACK_TARGET_UUID));
-    }
-
-    public void setAttackTargetUUID(UUID pUuid) {
-        if(this.level().isClientSide()) {
-            return;
-        }
-        this.entityData.set(DATA_ATTACK_TARGET_UUID, pUuid.toString());
-    }
-
-
-    public Armor getEquippedArmor() {
-        return Armor.byOrdinal(this.entityData.get(DATA_ARMOR));
-    }
-
-    public boolean hasArmor() {
-        return Armor.byOrdinal(this.entityData.get(DATA_ARMOR)) != Armor.NONE;
-    }
-
-    public void setEquippedArmor(Armor pEquippedArmor) {
-        this.entityData.set(DATA_ARMOR, pEquippedArmor.ordinal());
-    }
-
-
-    public boolean getIsExternalJump() {
-        return this.entityData.get(DATA_EXTERNAL_JUMP);
-    }
-
-    public void setExternalJump(boolean pExternalJump) {
-        this.entityData.set(DATA_EXTERNAL_JUMP, pExternalJump);
-    }
-
-
-    public boolean getIsAiming() {
-        return this.entityData.get(DATA_IS_AIMING);
-    }
-
-    public void setIsAiming(boolean pIsAiming) {
-        this.entityData.set(DATA_IS_AIMING, pIsAiming);
-    }
-
-    public boolean getIsAttacking() {
-        return this.entityData.get(DATA_IS_ATTACKING);
-    }
-
-    public void setIsAttacking(boolean pIsAttacking) {
-        this.entityData.set(DATA_IS_ATTACKING, pIsAttacking);
-    }
-
-
-    public boolean getIsRetreating() {
-        return this.entityData.get(DATA_IS_RETREATING);
-    }
-
-    public void setIsRetreating(boolean pIsRetreating) {
-        this.entityData.set(DATA_IS_RETREATING, pIsRetreating);
-    }
-
-
-
-
-    public int getAvoidTime() {
-        return this.avoidTime;
-    }
-
-    public void setAvoidTime(int pAvoidTime) {
-        this.avoidTime = pAvoidTime;
     }
 
     @Override
@@ -286,6 +201,17 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     // MAIN METHODS //
 
+
+    @Override
+    public void onAddedToWorld() {
+        super.onAddedToWorld();
+        this.persoM = this.random.nextBoolean();
+        this.persoT = this.random.nextBoolean();
+        if(!this.persoM && !this.persoT) {
+            this.persoS = this.random.nextBoolean();
+        }
+    }
+
     @Override
     public void tick() {
         super.tick();
@@ -300,6 +226,76 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             } else if(getIsExternalJump() && !isBeingRidden()) {
                 setExternalJump(false);
             }
+
+            if(this.isBeingRidden()) {
+                ++this.currentTimeRidden;
+                this.lastTimeRidden = this.level().getGameTime();
+            } else if(this.currentTimeRidden > 0) {
+                this.currentTimeRidden = 0;
+            }
+
+            doRiddenLongTermReaction();
+        }
+    }
+
+
+    private void doRiddenLongTermReaction() {
+        float modifier = 2.0f;
+        if(this.isSprinting()) {
+            modifier = 0.75f;
+        }
+        if(this.currentTimeRidden > 720 * modifier) {
+            if(this.getRandom().nextBoolean()) {
+                this.moodHandler.setNervous(null);
+            }
+
+        }
+
+        if(this.currentTimeRidden > 960 * modifier) {
+            if(this.persoT && this.getRandom().nextBoolean()) {
+                this.moodHandler.setAngry(null);
+            }
+        }
+
+        if(this.currentTimeRidden > 1920 * modifier) {
+            if(this.persoT && this.getRandom().nextInt(10) == 0) {
+                //TODO: bucking
+                this.activeJumpAnimation = true;
+                this.ejectPassengers();
+            }
+            if(!this.persoM && this.isSprinting() && this.getRandom().nextInt(50) == 0) {
+                this.setSprinting(false);
+            } else if(this.persoM && this.getRandom().nextInt(32) == 0) {
+                this.moodHandler.setInLove(null);
+            }
+
+//                if(this.persoS && this.getRandom().nextInt(25) == 0) {
+//                    this.setExternalJump(true);
+//                }
+        }
+
+        if(this.currentTimeRidden > 3840 * modifier) {
+            if(this.random.nextInt(20) == 0) {
+                if(this.isSprinting()) {
+                    this.setSprinting(false);
+                }
+            } else if(this.random.nextInt(70) == 0) {
+                this.activeJumpAnimation = true;
+                this.ejectPassengers();
+                if(this.persoM) {
+                    this.moodHandler.setInLove(null);
+                }
+            }
+
+            MobEffectInstance slowEffect = new MobEffectInstance(
+                MobEffects.MOVEMENT_SLOWDOWN,
+                    120,
+                    2,
+                    false,
+                    false,
+                    false);
+
+            this.addEffect(slowEffect, this);
         }
     }
 
@@ -307,6 +303,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private void setupAnimationStates() {
         updateIdleAnimation();
         updateAttackAnimation();
+        updateJumpAnimation();
     }
 
 
@@ -334,16 +331,27 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         }
     }
 
+    protected void updateJumpAnimation() {
+        if(this.activeJumpAnimation && this.jumpAnimationTimeout <= 0 && !this.jumpAnimationState.isStarted()) {
+            this.jumpAnimationTimeout = 14;
+            this.jumpAnimationState.start(this.tickCount);
+        } else if (this.jumpAnimationTimeout > 0 && this.jumpAnimationState.isStarted()){
+            --this.jumpAnimationTimeout;
+        } else {
+            this.jumpAnimationState.stop();
+            this.activeJumpAnimation = false;
+        }
+    }
+
 
     @Override
     protected void updateWalkAnimation(float pPartialTick) {
         float f;
-        if(this.getPose() == Pose.STANDING) {
+        if(this.getPose() == Pose.STANDING && !this.jumpAnimationState.isStarted()) {
             f = Math.min(pPartialTick * 6f, 1f);
         } else {
             f = 0f;
         }
-
         this.walkAnimation.update(f, 0.2f);
     }
 
@@ -412,7 +420,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     private void doSwim() {
         boolean isFloating = this.isInWater() &&
-                this.getFluidHeight(FluidTags.WATER) > this.getFluidJumpThreshold() + 0.2d ||
+                this.getFluidHeight(FluidTags.WATER) > this.getFluidJumpThreshold() - 0.5d ||
                 this.isInLava() ||
                 this.isInFluidType((fluidType, height) -> this.canSwimInFluidType(fluidType) &&
                         height > this.getFluidJumpThreshold());
@@ -421,7 +429,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             return;
         }
 
-        if(this.getRandom().nextFloat() < 0.3f) {
+        if(this.getRandom().nextFloat() < 0.1f) {
             Vec3 currentVelocity = this.getDeltaMovement();
             this.setDeltaMovement(currentVelocity.x, currentVelocity.y + 0.1d, currentVelocity.z);
         }
@@ -454,13 +462,13 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     protected void tickRidden(Player pPlayer, Vec3 pTravelVector) {
         super.tickRidden(pPlayer, pTravelVector);
         if(pPlayer.zza != 0.0d || pPlayer.xxa != 0.0d || this.isSprinting()) {
-            this.setRotLerp(pPlayer.getYRot(), (pPlayer.getXRot() * 0.5F) - 10f, 0.2f); //-10f rotates head upward
+            ModMethods.setRotLerp(this, pPlayer.getYRot(), (pPlayer.getXRot() * 0.5F) - 10f, 0.2f); //-10f rotates head upward
             this.yRotO = this.yBodyRot = this.getYRot();
             this.yHeadRot = pPlayer.getYHeadRot();
         }
 
         if (pTravelVector.z <= 0.0D) {
-            this.gallopSoundCounter = 0;
+            this.soundHandler.gallopSoundCounter = 0;
         }
 
 
@@ -478,19 +486,36 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         boolean gapFound = false;
         // Defining forward input
         double forwardInput = 1.05d;
-        boolean gapOne = ModMethods.getGapBelow(this, 1.0f);
-        boolean gapTwo = ModMethods.getGapBelow(this, 2.0f);
+        boolean gapOne = ModMethods.getGapBelow(this, 1.0f, 4);
+        boolean gapTwo = ModMethods.getGapBelow(this, 2.0f, 4);
+        boolean smallGapOne = ModMethods.getGapBelow(this, 1.0f, 2);
+        boolean smallGapFour = ModMethods.getGapBelow(this, 4.0f, 2);
+        boolean smallGapFive = ModMethods.getGapBelow(this, 5.0f, 2);
 
         //if((gapOne || gapTwo) && !getIsExternalJump()) {
-        if((gapOne) && !getIsExternalJump()) {
+        if((gapOne) && !getIsExternalJump() && !this.isSprinting()) {
             forwardInput = 0.0d;
             gapFound = true;
+        } else if(smallGapOne && !smallGapFour && !smallGapFive && this.isSprinting()) {
+            if(!this.getIsExternalJump()) {
+                this.setExternalJump(true);
+            }
+        } else if(gapOne) {
+            forwardInput = 0.0d;
+            gapFound = true;
+        }
+        // Sprinting, we automatically jump up blocks
+        if(this.isSprinting() && !this.getIsExternalJump() && ModMethods.getBlocksBlocking(this, 1)) {
+            this.setExternalJump(true);
         }
 
         if(!this.level().isClientSide()) {
             if(pPlayer.isSprinting()) {
                 pPlayer.setSprinting(false);
                 this.setSprinting(true);
+                if(this.persoM && this.getRandom().nextInt(18) == 0) {
+                    this.moodHandler.setInLove(pPlayer);
+                }
             } else if(pPlayer.zza < 0.0f && this.isSprinting()) {
                 this.setSprinting(false);
             }
@@ -517,6 +542,9 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
         if(this.getIsExternalJump()) {
             this.setExternalJump(false);
             if(this.onGround()) {
+                this.soundHandler.playJumpSound();
+                this.activeJumpAnimation = true;
+
                 doJumpVelocity(0.6d);
             }
         }
@@ -553,7 +581,12 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     @Override
     protected void positionRider(Entity pPassenger, MoveFunction pCallback) {
         super.positionRider(pPassenger, pCallback);
-        float standAnimO = 0.7F; //+ this.ridePositionBoost;
+        float standAnimO = this.positionBoost; //+ this.ridePositionBoost;
+        if(this.activeJumpAnimation && this.jumpAnimationTimeout >= 3) {
+            this.positionBoost = Mth.lerp(0.75f, this.positionBoost, 1.2f);
+        } else if(this.positionBoost > 0.7f) {
+            this.positionBoost = Mth.lerp(0.5f, this.positionBoost, 0.7f);
+        }
         float f = Mth.sin(this.yBodyRot * ((float)Math.PI / 180F));
         float f1 = Mth.cos(this.yBodyRot * ((float)Math.PI / 180F));
         float f2 = 0.7F * standAnimO;
@@ -573,6 +606,16 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
 
     public boolean isBeingRidden() {
         return !this.getPassengers().isEmpty();
+    }
+
+
+    @Override
+    public boolean causeFallDamage(float pFallDistance, float pMultiplier, DamageSource pSource) {
+        if (pFallDistance > 1.0F) {
+            this.soundHandler.playLandSound();
+            //this.playSound(SoundEvents.HORSE_LAND, 0.4F, 1.0F);
+        }
+        return super.causeFallDamage(pFallDistance, pMultiplier, pSource);
     }
 
     // Saddle Data
@@ -723,14 +766,76 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
+    public UUID getFriendUUID() {
+        return this.friendUUID;
+    }
 
-    private void setRotLerp(float pYRot, float pXRot, float delta) {
-        float yRot = this.getYRot();
-        float xRot = this.getXRot();
+    public void setFriendUUID(UUID pUuid) {
+        if(this.level().isClientSide()) {
+            return;
+        }
+        this.friendUUID = pUuid;
+    }
 
-        yRot = Mth.rotLerp(delta, yRot, pYRot);
-        xRot = Mth.rotLerp(delta, xRot, pXRot);
-        this.setYRot(yRot % 360.0F);
-        this.setXRot(xRot % 360.0F);
+    public UUID getAttackTargetUUID() {
+        if(this.level().isClientSide()) {
+            return NO_TARGET_UUID;
+        }
+        return UUID.fromString(this.entityData.get(DATA_ATTACK_TARGET_UUID));
+    }
+
+    public void setAttackTargetUUID(UUID pUuid) {
+        if(this.level().isClientSide()) {
+            return;
+        }
+        this.entityData.set(DATA_ATTACK_TARGET_UUID, pUuid.toString());
+    }
+
+
+    public Armor getEquippedArmor() {
+        return Armor.byOrdinal(this.entityData.get(DATA_ARMOR));
+    }
+
+    public boolean hasArmor() {
+        return Armor.byOrdinal(this.entityData.get(DATA_ARMOR)) != Armor.NONE;
+    }
+
+    public void setEquippedArmor(Armor pEquippedArmor) {
+        this.entityData.set(DATA_ARMOR, pEquippedArmor.ordinal());
+    }
+
+
+    public boolean getIsExternalJump() {
+        return this.entityData.get(DATA_EXTERNAL_JUMP);
+    }
+
+    public void setExternalJump(boolean pExternalJump) {
+        this.entityData.set(DATA_EXTERNAL_JUMP, pExternalJump);
+    }
+
+
+    public boolean getIsAiming() {
+        return this.entityData.get(DATA_IS_AIMING);
+    }
+
+    public void setIsAiming(boolean pIsAiming) {
+        this.entityData.set(DATA_IS_AIMING, pIsAiming);
+    }
+
+    public boolean getIsAttacking() {
+        return this.entityData.get(DATA_IS_ATTACKING);
+    }
+
+    public void setIsAttacking(boolean pIsAttacking) {
+        this.entityData.set(DATA_IS_ATTACKING, pIsAttacking);
+    }
+
+
+    public boolean getIsRetreating() {
+        return this.entityData.get(DATA_IS_RETREATING);
+    }
+
+    public void setIsRetreating(boolean pIsRetreating) {
+        this.entityData.set(DATA_IS_RETREATING, pIsRetreating);
     }
 }

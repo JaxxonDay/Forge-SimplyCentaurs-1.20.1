@@ -49,6 +49,8 @@ public class CentaurRenderer extends MobRenderer<CentaurEntity, CentaurModel<Cen
 
         pMatrixStack.scale(0.89f, 0.89f, 0.89f);
 
+        pMatrixStack.translate(0.0f, 0.1f, 0.0f);
+
 
         super.render(pEntity, pEntityYaw, pPartialTicks, pMatrixStack, pBuffer, pPackedLight);
     }

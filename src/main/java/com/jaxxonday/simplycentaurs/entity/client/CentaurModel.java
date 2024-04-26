@@ -199,7 +199,7 @@ public class CentaurModel<T extends Entity> extends HierarchicalModel<T> {
 		}
 
 		this.animate(centaurEntity.attackAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 3f);
-
+		this.animate(centaurEntity.jumpAnimationState, CentaurAnimationDefinitions.RAISE_BASE, ageInTicks, 2.7f);
 		//centaurEntity.heightBoost = (-(this.body.y) + 4.0d) * 0.0625d;
 
 		//this.animate(centaurEntity.idleAnimationState, CentaurAnimationDefinitions.ANY_ARM_WAIST_ATTACK, ageInTicks, 2f);

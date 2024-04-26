@@ -149,15 +149,6 @@ public class CentaurAttackGoal extends MeleeAttackGoal {
             }
         }
 
-        if(!this.centaurEntity.level().isClientSide()) {
-            if(this.centaurEntity.getAvoidTime() > 0) {
-                if(this.centaurEntity.getIsAttacking()) {
-                    this.centaurEntity.setIsAttacking(false);
-                }
-                return false;
-            }
-        }
-
         // If we don't have a weapon, and it's not a skeleton, don't attack
         ItemStack itemHeld = this.centaurEntity.getHeldItem();
         if(!ModMethods.isWeapon(itemHeld) && !(this.centaurEntity.getTarget() instanceof Skeleton)) {

@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockState;
 public class CentaurSoundHandler {
     private final CentaurEntity centaurEntity;
 
-    protected int gallopSoundCounter;
+    public int gallopSoundCounter;
 
     public CentaurSoundHandler(CentaurEntity centaurEntity) {
         this.centaurEntity = centaurEntity;
@@ -56,6 +56,18 @@ public class CentaurSoundHandler {
     protected void playGallopSound(SoundType pSoundType) {
         CentaurEntity entity = this.centaurEntity;
         entity.playSound(SoundEvents.HORSE_GALLOP, pSoundType.getVolume() * 0.05F, pSoundType.getPitch() + 0.2f);
+    }
+
+
+    public void playJumpSound() {
+        CentaurEntity entity = this.centaurEntity;
+
+        entity.playSound(SoundEvents.HORSE_JUMP, 0.4F, 1.1F + (entity.getRandom().nextFloat() * 0.2f));
+    }
+
+    public void playLandSound() {
+        CentaurEntity entity = this.centaurEntity;
+        entity.playSound(SoundEvents.HORSE_LAND, 0.3F, 1.1F + (entity.getRandom().nextFloat() * 0.2f));
     }
 
 

@@ -7,6 +7,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -121,6 +122,9 @@ public class CentaurInteractionHandler {
             entity.dropItem(new ItemStack(Items.SADDLE));
             return true;
         } else if(itemStack.isEmpty() && !pPlayer.isCrouching() && entity.isSaddled()) {
+
+            doReactionToBeingRidden(pPlayer);
+
             entity.doPlayerRide(pPlayer);
             return true;
         } else if(itemStack.is(Items.SADDLE) && !entity.isSaddled()) {
@@ -129,6 +133,28 @@ public class CentaurInteractionHandler {
             return true;
         }
         return false;
+    }
+
+    private void doReactionToBeingRidden(Player pPlayer) {
+        CentaurEntity entity = this.centaurEntity;
+        if(entity.persoM) {
+            if(entity.getRandom().nextInt(5) == 0) {
+                moodHandler.setInLove(pPlayer);
+            }
+        }
+        if(Math.abs(entity.lastTimeRidden - entity.level().getGameTime()) > entity.RIDDEN_ANGRY_INTERVAL) {
+            if(!entity.persoM || entity.persoT) {
+                moodHandler.setAngry(pPlayer);
+            }
+            if(entity.persoS) {
+                if(entity.getRandom().nextBoolean()) {
+                    moodHandler.setNervous(pPlayer);
+                } else {
+                    moodHandler.setHappy(pPlayer);
+                }
+
+            }
+        }
     }
 
     public boolean handleArmorPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
