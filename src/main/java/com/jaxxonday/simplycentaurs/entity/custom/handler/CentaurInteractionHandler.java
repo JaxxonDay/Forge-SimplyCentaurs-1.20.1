@@ -13,9 +13,11 @@ import net.minecraft.world.item.Items;
 
 public class CentaurInteractionHandler {
     private final CentaurEntity centaurEntity;
+    private final CentaurMoodHandler moodHandler;
 
-    public CentaurInteractionHandler(CentaurEntity centaurEntity) {
+    public CentaurInteractionHandler(CentaurEntity centaurEntity, CentaurMoodHandler moodHandler) {
         this.centaurEntity = centaurEntity;
+        this.moodHandler = moodHandler;
     }
 
     public boolean handleItemPlacement(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
@@ -45,8 +47,9 @@ public class CentaurInteractionHandler {
 
     private boolean handledItemHandRemoval(Player pPlayer, ItemStack itemStack) {
         CentaurEntity entity = this.centaurEntity;
+        CentaurMoodHandler mood = this.moodHandler;
         if(itemStack.isEmpty() && pPlayer.isCrouching() && entity.hasItemInHand()) {
-            entity.setAngryAboutLosingItem(pPlayer, entity.getHeldItem().getItem(), entity.getHeldItem().getCount());
+            mood.setAngryAboutLosingItem(pPlayer, entity.getHeldItem().getItem(), entity.getHeldItem().getCount());
             entity.dropItem(entity.getHeldItem().copy());
             entity.unequipItem(null);
             return true;
@@ -57,8 +60,9 @@ public class CentaurInteractionHandler {
 
     private boolean handledItemEquipWhenEmptyHand(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
         CentaurEntity entity = this.centaurEntity;
+        CentaurMoodHandler mood = this.moodHandler;
         if(!itemStack.isEmpty() && !entity.hasItemInHand()) {
-            entity.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
+            mood.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
             entity.equipItem(pPlayer, pHand, itemStack, null);
             return true;
         }
@@ -68,15 +72,16 @@ public class CentaurInteractionHandler {
 
     private boolean handledItemSwapEquip(Player pPlayer, InteractionHand pHand, ItemStack itemStack) {
         CentaurEntity entity = this.centaurEntity;
+        CentaurMoodHandler mood = this.moodHandler;
         if(!itemStack.isEmpty() && entity.hasItemInHand()) {
             if(!ModMethods.isFoodItem(itemStack)) {
-                entity.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
+                mood.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
                 entity.dropItem(entity.getHeldItem().copy());
                 entity.unequipItem(null);
                 entity.equipItem(pPlayer, pHand, itemStack, null);
             } else {
                 System.out.println("Tried placing item in inventory");
-                entity.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
+                mood.setHappyAboutReceivingItem(pPlayer, itemStack.getItem(), 1);
                 entity.placeItemInInventory(pPlayer, pHand, itemStack, null);
             }
             return true;

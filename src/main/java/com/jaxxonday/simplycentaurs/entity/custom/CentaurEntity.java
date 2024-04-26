@@ -1,7 +1,9 @@
 package com.jaxxonday.simplycentaurs.entity.custom;
 
 import com.jaxxonday.simplycentaurs.entity.ai.*;
+import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurAdditionalAttributeHandler;
 import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurInteractionHandler;
+import com.jaxxonday.simplycentaurs.entity.custom.handler.CentaurMoodHandler;
 import com.jaxxonday.simplycentaurs.item.ModItems;
 import com.jaxxonday.simplycentaurs.util.ModMethods;
 import net.minecraft.core.BlockPos;
@@ -92,6 +94,9 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     private UUID avoidEntityUUID = NO_TARGET_UUID;
 
     private final CentaurInteractionHandler interactionHandler;
+    private final CentaurAdditionalAttributeHandler attributeHandler;
+
+    private final CentaurMoodHandler moodHandler;
 
 
 
@@ -115,7 +120,9 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     public CentaurEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setMaxUpStep(1.2f);
-        this.interactionHandler = new CentaurInteractionHandler(this);
+        this.attributeHandler = new CentaurAdditionalAttributeHandler(this);
+        this.moodHandler = new CentaurMoodHandler(this);
+        this.interactionHandler = new CentaurInteractionHandler(this, this.moodHandler);
         initializeLikedItems();
         initializeTemptGoals();
     }
@@ -368,47 +375,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-
-    public void updateAttackAttribute() {
-        ItemStack heldItem = this.inventory.getItem(InventorySlot.HAND.ordinal()); // Check the designated slot for the item
-        if(!ModMethods.canCauseDamage(this.inventory)) {
-            removeAttackAttribute();
-            return;
-        }
-        double additionalDamage = getAdditionalDamage(heldItem);
-        if (additionalDamage != 0.0d) {
-            AttributeModifier modifier = new AttributeModifier(ATTACK_DAMAGE_MODIFIER_UUID, "Weapon modifier", additionalDamage, AttributeModifier.Operation.ADDITION);
-            if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) == null) {
-                this.getAttribute(Attributes.ATTACK_DAMAGE).addTransientModifier(modifier);
-                System.out.println("Added Attack Damage modifier of amount " + additionalDamage);
-            }
-        } else {
-            removeAttackAttribute();
-        }
-    }
-
-    private void removeAttackAttribute() {
-        if (this.getAttribute(Attributes.ATTACK_DAMAGE).getModifier(ATTACK_DAMAGE_MODIFIER_UUID) != null) {
-            this.getAttribute(Attributes.ATTACK_DAMAGE).removeModifier(ATTACK_DAMAGE_MODIFIER_UUID);
-            System.out.println("Removed Attack Damage modifier");
-        }
-    }
-
-    private double getAdditionalDamage(ItemStack itemStack) {
-        if (itemStack != null && !itemStack.isEmpty()) { // Check if itemStack is not null and not empty
-            Collection<AttributeModifier> modifiers = itemStack.getAttributeModifiers(EquipmentSlot.MAINHAND).get(Attributes.ATTACK_DAMAGE);
-            if (modifiers != null && !modifiers.isEmpty()) { // Ensure modifiers are not null or empty
-                return modifiers.stream()
-                        .filter(modifier -> modifier.getOperation() == AttributeModifier.Operation.ADDITION)
-                        .mapToDouble(AttributeModifier::getAmount)
-                        .sum();  // Sum all the addition modifiers
-            }
-        }
-        return 0;  // Return 0 if no valid modifiers are found or itemStack is null/empty
-    }
-
-
-    private void adjustWildness(Player player, int amount) {
+    public void adjustWildness(Player player, int amount) {
         if(this.getFriendUUID().toString().equals(player.getUUID().toString())) {
             System.out.println("Won't adjust wildness, since we're friends!");
             if(amount > 0) {
@@ -657,7 +624,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             this.inventory.setItem(InventorySlot.HAND.ordinal(), itemStack.copy());
         }
 
-        updateAttackAttribute();
+        this.attributeHandler.updateAttackAttribute();
 
 
         this.usePlayerItem(pPlayer, pHand, itemStack, true);
@@ -697,7 +664,7 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
             this.inventory.setItem(InventorySlot.HAND.ordinal(), ItemStack.EMPTY);
         }
 
-        updateAttackAttribute();
+        this.attributeHandler.updateAttackAttribute();
     }
 
     public boolean hasItemInHand() {
@@ -782,15 +749,15 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-    public void setHappyAboutReceivingItem(Player player, Item item, int multiplier) {
-        int value = getLikedItemValue(item);
-        if(value > 0) {
-            this.setHappy(player);
-            this.adjustWildness(player, -value * multiplier);
-        }
-    }
+//    public void setHappyAboutReceivingItem(Player player, Item item, int multiplier) {
+//        int value = getLikedItemValue(item);
+//        if(value > 0) {
+//            this.setHappy(player);
+//            this.adjustWildness(player, -value * multiplier);
+//        }
+//    }
 
-    private int getLikedItemValue(Item item) {
+    public int getLikedItemValue(Item item) {
         if(!isLikedItem(item)) {
             System.out.println("Item " + item + " wasn't liked");
             return 0;
@@ -800,13 +767,13 @@ public class CentaurEntity extends ModAbstractSmartCreature implements Saddleabl
     }
 
 
-    public void setAngryAboutLosingItem(Player player, Item item, int multiplier) {
-        int value = getLikedItemValue(item);
-        if(value > 0) {
-            this.setAngry(player);
-            this.adjustWildness(player, value * multiplier);
-        }
-    }
+//    public void setAngryAboutLosingItem(Player player, Item item, int multiplier) {
+//        int value = getLikedItemValue(item);
+//        if(value > 0) {
+//            this.setAngry(player);
+//            this.adjustWildness(player, value * multiplier);
+//        }
+//    }
 
 
 
